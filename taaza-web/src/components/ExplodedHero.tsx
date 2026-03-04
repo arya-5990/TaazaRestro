@@ -341,16 +341,7 @@ export default function ExplodedHero() {
                     </div>
                 </div>
 
-                {/* ── Right floating badges ── */}
-                <motion.div
-                    style={{ position: "absolute", right: "2rem", top: "50%", transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: "0.75rem" }}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.2, duration: 0.8 }}
-                >
-                    <FloatingBadge label="Premium" value="Halal Certified" delay={0} />
-                    <FloatingBadge label="Since 2019" value="★★★★★ · 200+ Reviews" delay={0.5} />
-                </motion.div>
+
 
                 {/* ── Scroll cue ── */}
                 <motion.div
@@ -417,19 +408,5 @@ function ArrowBtn({ id, onClick, children, "aria-label": ariaLabel }: {
             whileHover={{ scale: 1.1, background: "var(--gold-primary)", color: "var(--obsidian)" }}
             whileTap={{ scale: 0.9 }}
         >{children}</motion.button>
-    );
-}
-
-function FloatingBadge({ label, value, delay }: { label: string; value: string; delay: number }) {
-    return (
-        <motion.div
-            className="glass-surface"
-            style={{ padding: "0.6rem 0.9rem", borderRadius: "0.75rem" }}
-            animate={{ y: [0, -5, 0] }}
-            transition={{ repeat: Infinity, duration: 3 + delay, ease: "easeInOut", delay }}
-        >
-            <p className="label-cinzel" style={{ fontSize: "0.5rem", color: "var(--gold-primary)" }}>{label}</p>
-            <p style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontSize: "0.82rem", color: "var(--text-primary)", marginTop: "0.1rem" }}>{value}</p>
-        </motion.div>
     );
 }
