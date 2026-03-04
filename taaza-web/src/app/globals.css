@@ -1,0 +1,262 @@
+@reference "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&family=Cinzel:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================
+   DESIGN TOKENS — CSS Custom Properties
+   ============================================= */
+:root {
+  --gold-primary: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-dark: #8B6914;
+  --gold-muted: rgba(201, 168, 76, 0.15);
+  --gold-border: rgba(201, 168, 76, 0.3);
+
+  --obsidian: #05040A;
+  --obsidian-mid: #0C0B14;
+  --obsidian-light: #13111F;
+  --surface-glass: rgba(12, 11, 20, 0.75);
+
+  --text-primary: #F5F0E8;
+  --text-secondary: rgba(245, 240, 232, 0.6);
+  --text-muted: rgba(245, 240, 232, 0.35);
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
+
+  --space-section: clamp(5rem, 10vw, 9rem);
+  --ease-luxury: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* =============================================
+   BASE RESET & GLOBAL STYLES
+   ============================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--obsidian);
+  /* NOTE: No overflow-x:hidden here — it would break position:sticky */
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--obsidian);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* NOTE: No overflow-x:hidden — breaks position:sticky on child elements */
+}
+
+::selection {
+  background: var(--gold-primary);
+  color: var(--obsidian);
+}
+
+/* =============================================
+   COMPONENT LAYER — Pure CSS (no @apply)
+   ============================================= */
+
+/* Gold Rule Divider */
+.gold-rule {
+  display: block;
+  width: 4rem;
+  /* 64px */
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+/* ── Headline Scale System ── */
+.headline-xl {
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 8vw, 7.5rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.headline-lg {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.headline-md {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* ── Cinzel label / section marker ── */
+.label-cinzel {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold-primary);
+}
+
+/* ── Gold italic flourish ── */
+.flourish {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--gold-primary);
+}
+
+/* ── Glassmorphism surface ── */
+.glass-surface {
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--gold-border);
+}
+
+/* ── Magnetic button base ── */
+.btn-magnetic {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.4s var(--ease-luxury);
+  overflow: hidden;
+}
+
+.btn-gold-outline {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0.85rem 2.25rem;
+  border: 1px solid var(--gold-primary);
+  color: var(--gold-primary);
+  background: transparent;
+  transition: color 0.45s var(--ease-luxury);
+}
+
+.btn-gold-outline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gold-primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.45s var(--ease-luxury);
+  z-index: -1;
+}
+
+.btn-gold-outline:hover {
+  color: var(--obsidian);
+}
+
+.btn-gold-outline:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ── Cinematic grain overlay (fixed, pointer-events:none) ── */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ── Scanline overlay ── */
+.scanline-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 998;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px);
+}
+
+/* =============================================
+   UTILITY HELPERS
+   ============================================= */
+.text-gold {
+  color: var(--gold-primary);
+}
+
+.text-gold-light {
+  color: var(--gold-light);
+}
+
+.border-gold {
+  border-color: var(--gold-border);
+}
+
+.bg-obsidian {
+  background-color: var(--obsidian);
+}
+
+.bg-obsidian-mid {
+  background-color: var(--obsidian-mid);
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* =============================================
+   CUSTOM SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--obsidian);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold-dark);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-primary);
+}
