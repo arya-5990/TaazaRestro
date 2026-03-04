@@ -229,7 +229,7 @@ export default function ExplodedHero() {
                             custom={direction}
                             variants={tv}
                             initial="enter" animate="center" exit="exit"
-                            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
                             className="headline-xl"
                             style={{ lineHeight: 0.92, marginBottom: "0.85rem" }}
                         >
