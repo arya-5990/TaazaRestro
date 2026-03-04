@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import MenuBookModal from "./MenuBookModal";
 
 const menuItems = [
     {
@@ -58,6 +59,7 @@ const menuItems = [
 export default function MenuSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-5%" });
+    const [isBookOpen, setIsBookOpen] = useState(false);
 
     return (
         <section
@@ -200,20 +202,18 @@ export default function MenuSection() {
                     <p className="flourish text-[var(--text-secondary)] mb-5 text-sm">
                         Seasonal specials curated every 30 days
                     </p>
-                    <motion.a
-                        href="#reserve"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            document.querySelector("#reserve")?.scrollIntoView({ behavior: "smooth" });
-                        }}
+                    <motion.button
+                        onClick={() => setIsBookOpen(true)}
                         className="btn-gold-outline inline-flex"
                         whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.96 }}
                     >
                         View Full Menu
-                    </motion.a>
+                    </motion.button>
                 </motion.div>
             </div>
+
+            <MenuBookModal isOpen={isBookOpen} onClose={() => setIsBookOpen(false)} />
         </section>
     );
 }

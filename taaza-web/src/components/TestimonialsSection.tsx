@@ -250,7 +250,7 @@ export default function TestimonialsSection() {
                                             style={{ fontFamily: "var(--font-serif)" }}
                                             aria-hidden="true"
                                         >
-                                            "
+                                            &quot;
                                         </div>
 
                                         {/* Stars */}

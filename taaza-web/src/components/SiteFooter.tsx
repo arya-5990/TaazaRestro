@@ -38,7 +38,7 @@ export default function SiteFooter() {
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-8">
                 {/* Top row — Wordmark + Nav */}
-                <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1.5fr] gap-x-8 gap-y-12 mb-16">
                     {/* Brand block */}
                     <div>
                         <motion.div
@@ -128,6 +128,41 @@ export default function SiteFooter() {
                             </ul>
                         </motion.div>
                     ))}
+
+                    {/* Order Online Column */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.7, delay: 0.5 }}
+                    >
+                        <p className="label-cinzel text-[var(--gold-primary)] mb-6">ORDER ONLINE</p>
+                        <div className="flex flex-col gap-4">
+                            <a
+                                href="http://zoma.to/r/20493103"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center gap-3 p-3 rounded-lg border border-[var(--gold-border)] hover:border-[var(--gold-primary)] hover:bg-[var(--gold-muted)] transition-all duration-300 w-full bg-white/5"
+                            >
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-white flex items-center justify-center p-1">
+                                    {/* Using standard img to bypass Next/Image external domain configs */}
+                                    <img src="/social_media_and_delivery_partner/Zomato_logo.png" alt="Zomato" className="w-full h-full object-contain rounded-full" />
+                                </div>
+                                <span className="text-[var(--text-secondary)] group-hover:text-[var(--gold-light)] text-sm" style={{ fontFamily: "var(--font-body)" }}>Order on Zomato</span>
+                            </a>
+                            <a
+                                href="https://www.swiggy.com/city/indore/taaza-restaurant-ab-road-vijay-nagar-rest642525"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center gap-3 p-3 rounded-lg border border-[var(--gold-border)] hover:border-[var(--gold-primary)] hover:bg-[var(--gold-muted)] transition-all duration-300 w-full bg-white/5"
+                            >
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-white flex items-center justify-center p-1">
+                                    <img src="/social_media_and_delivery_partner/swiggy.jpeg" alt="Swiggy" className="w-full h-full object-contain rounded-full" />
+                                </div>
+                                <span className="text-[var(--text-secondary)] group-hover:text-[var(--gold-light)] text-sm" style={{ fontFamily: "var(--font-body)" }}>Order on Swiggy</span>
+                            </a>
+                        </div>
+                    </motion.div>
                 </div>
 
                 {/* Google Maps Embed */}
