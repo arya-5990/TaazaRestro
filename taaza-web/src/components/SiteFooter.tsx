@@ -10,9 +10,9 @@ const footerNav = {
 };
 
 const socialLinks = [
-    { icon: Instagram, label: "Instagram", href: "#" },
-    { icon: Facebook, label: "Facebook", href: "#" },
-    { icon: Youtube, label: "YouTube", href: "#" },
+    { imageSrc: "/social_media_and_delivery_partner/instagram.png", label: "Instagram", href: "https://www.instagram.com/taazaindore/" },
+    { imageSrc: "/social_media_and_delivery_partner/Zomato_logo.png", label: "Zomato", href: "http://zoma.to/r/20493103" },
+    { imageSrc: "/social_media_and_delivery_partner/swiggy.jpeg", label: "Swiggy", href: "https://www.swiggy.com/city/indore/taaza-restaurant-ab-road-vijay-nagar-rest642525" },
 ];
 
 export default function SiteFooter() {
@@ -71,9 +71,9 @@ export default function SiteFooter() {
                             {/* Contact */}
                             <div className="mt-8 space-y-3">
                                 {[
-                                    { Icon: MapPin, text: "12, Fusion Quarter, Bandra West, Mumbai 400050" },
-                                    { Icon: Phone, text: "+91 22 6789 0012" },
-                                    { Icon: Mail, text: "reserve@taazarestaurant.in" },
+                                    { Icon: MapPin, text: "Shop No. LG-4, Exotica Lower Ground Floor, Shalimar Township, AB Road, Indore, MP 452010" },
+                                    { Icon: Phone, text: "+91 731 XXX XXXX" },
+                                    { Icon: Mail, text: "reserve@taazaindore.in" },
                                 ].map(({ Icon, text }) => (
                                     <div key={text} className="flex items-start gap-3 group">
                                         <div className="mt-0.5 p-1.5 rounded-md border border-[var(--gold-border)] shrink-0"
@@ -130,6 +130,68 @@ export default function SiteFooter() {
                     ))}
                 </div>
 
+                {/* Google Maps Embed */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8 }}
+                    className="mb-10"
+                >
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="gold-rule flex-1" />
+                        <p
+                            className="label-cinzel text-[var(--gold-primary)] text-xs tracking-[0.2em]"
+                        >
+                            FIND US
+                        </p>
+                        <div className="gold-rule flex-1" />
+                    </div>
+
+                    <div
+                        className="relative w-full overflow-hidden"
+                        style={{
+                            borderRadius: "12px",
+                            border: "1px solid var(--gold-border)",
+                            boxShadow: "0 0 40px rgba(201, 168, 76, 0.08), inset 0 0 0 1px rgba(201,168,76,0.05)",
+                            height: "280px",
+                        }}
+                    >
+                        {/* Subtle gold corner accents */}
+                        <span className="absolute top-0 left-0 w-5 h-5 border-t border-l border-[var(--gold-primary)] z-10 pointer-events-none" style={{ borderRadius: "12px 0 0 0" }} />
+                        <span className="absolute top-0 right-0 w-5 h-5 border-t border-r border-[var(--gold-primary)] z-10 pointer-events-none" style={{ borderRadius: "0 12px 0 0" }} />
+                        <span className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-[var(--gold-primary)] z-10 pointer-events-none" style={{ borderRadius: "0 0 0 12px" }} />
+                        <span className="absolute bottom-0 right-0 w-5 h-5 border-b border-r border-[var(--gold-primary)] z-10 pointer-events-none" style={{ borderRadius: "0 0 12px 0" }} />
+
+                        <iframe
+                            title="Taaza Restaurant Location"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3679.4338!2d75.8999899!3d22.7643345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39631d33fc9f7ca5%3A0xf0d00e09c8feb0f3!2sTaaza%20Restaurant!5e0!3m2!1sen!2sin!4v1709000000000!5m2!1sen!2sin"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0, filter: "grayscale(0.3) contrast(1.05) brightness(0.85)" }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                        />
+                    </div>
+
+                    {/* Directions link */}
+                    <div className="flex justify-end mt-3">
+                        <a
+                            href="https://maps.app.goo.gl/P2EjTduRYVzvJfjh8"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[var(--gold-primary)] hover:text-[var(--gold-light)] transition-colors duration-300 text-xs group"
+                            style={{ fontFamily: "var(--font-body)" }}
+                        >
+                            <MapPin size={11} strokeWidth={1.5} />
+                            <span className="underline underline-offset-2 decoration-[var(--gold-border)] group-hover:decoration-[var(--gold-primary)] transition-all duration-300">
+                                Open in Google Maps
+                            </span>
+                        </a>
+                    </div>
+                </motion.div>
+
                 {/* Bottom bar */}
                 <div className="border-t border-[var(--gold-border)] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     {/* Copyright */}
@@ -137,27 +199,28 @@ export default function SiteFooter() {
                         className="text-[var(--text-muted)] text-xs"
                         style={{ fontFamily: "var(--font-body)" }}
                     >
-                        © 2025 Taaza Restaurant Pvt. Ltd. &nbsp;·&nbsp; All rights reserved
+                        © {new Date().getFullYear()} Taaza Restaurant Pvt. Ltd. &nbsp;·&nbsp; All rights reserved
                     </p>
 
                     {/* Social */}
                     <div className="flex items-center gap-4">
-                        {socialLinks.map(({ icon: Icon, label, href }) => (
+                        {socialLinks.map(({ imageSrc, label, href }) => (
                             <motion.a
                                 key={label}
                                 href={href}
                                 aria-label={label}
-                                onClick={(e) => e.preventDefault()}
-                                className="p-2.5 rounded-full border border-[var(--gold-border)] text-[var(--gold-primary)] hover:border-[var(--gold-primary)] hover:bg-[var(--gold-muted)] transition-all duration-300 group"
+                                target={href !== "#" ? "_blank" : undefined}
+                                rel={href !== "#" ? "noopener noreferrer" : undefined}
+                                onClick={href === "#" ? (e) => e.preventDefault() : undefined}
+                                className="w-10 h-10 rounded-full border border-[var(--gold-border)] hover:border-[var(--gold-primary)] hover:bg-[var(--gold-muted)] transition-all duration-300 group flex items-center justify-center overflow-hidden bg-white/5"
                                 whileHover={{ scale: 1.12, rotate: 5 }}
                                 whileTap={{ scale: 0.9 }}
                             >
-                                <Icon
-                                    size={14}
-                                    strokeWidth={1.5}
-                                    style={{
-                                        filter: "drop-shadow(0 0 6px rgba(201,168,76,0.4))",
-                                    }}
+                                <img
+                                    src={imageSrc}
+                                    alt={label}
+                                    className="w-full h-full object-cover"
+                                    style={{ padding: "0.4rem", borderRadius: "50%" }}
                                 />
                             </motion.a>
                         ))}

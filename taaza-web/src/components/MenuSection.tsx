@@ -63,7 +63,7 @@ export default function MenuSection() {
         <section
             id="menu"
             ref={sectionRef}
-            className="relative py-[var(--space-section)] overflow-hidden"
+            className="relative pt-[calc(var(--space-section)*0.2)] pb-[var(--space-section)] overflow-hidden"
             style={{ background: "linear-gradient(180deg, var(--obsidian) 0%, var(--obsidian-mid) 50%, var(--obsidian) 100%)" }}
         >
             {/* Decorative corner */}

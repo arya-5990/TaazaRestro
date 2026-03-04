@@ -4,16 +4,7 @@ import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 
-const sensoryTags = [
-    { emoji: "🌿", label: "Za'atar & Herbs" },
-    { emoji: "🔥", label: "Wood-fire Grilled" },
-    { emoji: "🌺", label: "Rose Water & Saffron" },
-    { emoji: "🍋", label: "Preserved Lemon" },
-    { emoji: "🫒", label: "First-press Olive Oil" },
-    { emoji: "🧄", label: "Levantine Spice Blends" },
-    { emoji: "🍯", label: "Wildflower Honey" },
-    { emoji: "🌙", label: "Sumac & Tamarind" },
-];
+
 
 export default function ExperienceSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
@@ -49,7 +40,7 @@ export default function ExperienceSection() {
         <section
             id="experience"
             ref={sectionRef}
-            className="relative py-[var(--space-section)] overflow-hidden"
+            className="relative pt-[var(--space-section)] pb-4 overflow-hidden"
         >
             {/* Subtle background texture */}
             <div
@@ -76,7 +67,7 @@ export default function ExperienceSection() {
             ASYMMETRIC BENTO GRID
             Col ratio: 5fr | 3fr | 4fr (intentional asymmetry)
             ──────────────────────────────────────────── */}
-                <div className="grid grid-cols-1 lg:grid-cols-[5fr_3fr_4fr] gap-4 mb-20">
+                <div className="grid grid-cols-1 lg:grid-cols-[5fr_3fr_4fr] gap-4 mb-0 z-10 relative">
 
                     {/* CELL 1 — Large image, tall */}
                     <motion.div
@@ -232,54 +223,7 @@ export default function ExperienceSection() {
                     </div>
                 </div>
 
-                {/* ──────────────────────────────────────
-            SENSORY JOURNEY TAGS
-            ────────────────────────────────────── */}
-                <div>
-                    <motion.p
-                        className="label-cinzel text-center mb-8"
-                        initial={{ opacity: 0 }}
-                        animate={isInView ? { opacity: 1 } : {}}
-                        transition={{ delay: 0.6 }}
-                    >
-                        The Sensory Journey
-                    </motion.p>
 
-                    <motion.ul
-                        className="flex flex-wrap justify-center gap-3"
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate={isInView ? "visible" : "hidden"}
-                    >
-                        {sensoryTags.map((tag, i) => (
-                            <motion.li
-                                key={tag.label}
-                                variants={itemVariants}
-                                transition={{ delay: i * 0.07 + 0.5 }}
-                                whileHover={{ scale: 1.06, y: -2 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <div
-                                    className="group flex items-center gap-2.5 px-5 py-2.5 cursor-pointer transition-all duration-300"
-                                    style={{
-                                        borderRadius: "2rem",
-                                        border: "1px solid var(--gold-border)",
-                                        background: "var(--gold-muted)",
-                                        backdropFilter: "blur(8px)",
-                                    }}
-                                >
-                                    <span className="text-base leading-none">{tag.emoji}</span>
-                                    <span
-                                        style={{ fontFamily: "var(--font-display)", fontSize: "0.6rem", letterSpacing: "0.15em" }}
-                                        className="text-[var(--text-secondary)] group-hover:text-[var(--gold-primary)] transition-colors duration-300 uppercase"
-                                    >
-                                        {tag.label}
-                                    </span>
-                                </div>
-                            </motion.li>
-                        ))}
-                    </motion.ul>
-                </div>
             </div>
         </section>
     );
