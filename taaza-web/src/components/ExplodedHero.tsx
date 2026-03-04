@@ -39,23 +39,49 @@ export default function ExplodedHero() {
         return rawFrame.on("change", (v) => setFrameIndex(Math.round(v)));
     }, [rawFrame]);
 
-    /* ── Preload all frames ── */
+    /* ── Progressive frame preload ── */
     useEffect(() => {
-        let loaded = 0;
         imagesRef.current = [];
-        for (let i = 0; i < TOTAL_FRAMES; i++) {
+
+        const loadFrame = (i: number) => {
             const img = new window.Image();
             img.src = frameUrl(FIRST_FRAME + i);
-            img.onload = () => { loaded++; if (loaded === TOTAL_FRAMES) setImagesLoaded(true); };
-            imagesRef.current[i] = img;
-        }
+            img.onload = () => {
+                imagesRef.current[i] = img;
+                // Show the very first loaded frame immediately — don't wait for all 93
+                if (i === 0) setImagesLoaded(true);
+                // Repaint if this frame matches current scroll position
+                setFrameIndex((cur) => cur);
+            };
+        };
+
+        // First 15 frames — load immediately (visible on hero load)
+        for (let i = 0; i < Math.min(15, TOTAL_FRAMES); i++) loadFrame(i);
+
+        // Remaining frames — load after 600ms so the critical frames win bandwidth
+        const timer = setTimeout(() => {
+            for (let i = 15; i < TOTAL_FRAMES; i++) loadFrame(i);
+        }, 600);
+
+        return () => clearTimeout(timer);
     }, []);
 
     /* ── Draw frame → canvas with cover-fit crop ── */
     useEffect(() => {
         const canvas = canvasRef.current;
-        const img = imagesRef.current[frameIndex];
-        if (!canvas || !img?.complete || !img.naturalWidth) return;
+        if (!canvas) return;
+
+        // Use the requested frame if ready, otherwise fall back to the nearest
+        // loaded frame so the animation never freezes on a blank canvas
+        let img = imagesRef.current[frameIndex];
+        if (!img?.complete || !img.naturalWidth) {
+            // Walk backward to find the closest already-loaded frame
+            for (let f = frameIndex - 1; f >= 0; f--) {
+                const candidate = imagesRef.current[f];
+                if (candidate?.complete && candidate.naturalWidth) { img = candidate; break; }
+            }
+        }
+        if (!img?.complete || !img.naturalWidth) return;
 
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
