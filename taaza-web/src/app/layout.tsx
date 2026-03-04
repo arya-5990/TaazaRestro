@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description:
     "Experience the art of Arabic fusion cuisine. Taaza blends ancient Levantine traditions with contemporary culinary technique, curated in an atmosphere of understated luxury.",
   keywords: ["Arabic restaurant", "fusion cuisine", "Taaza", "fine dining", "Levantine food"],
+  icons: {
+    icon: "/logo_taaza.jpg",
+    apple: "/logo_taaza.jpg",
+  },
   openGraph: {
     title: "Taaza — Premium Arabic Fusion Restaurant",
     description: "An immersive culinary journey through Arabic fusion.",
