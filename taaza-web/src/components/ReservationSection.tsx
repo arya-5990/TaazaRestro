@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 interface FormState {
     name: string; email: string; phone: string;
@@ -19,12 +21,26 @@ const OCCASIONS = [
     "Date Night", "Family Gathering", "Special Celebration", "Other",
 ];
 
+/** Returns a YYYY-MM-DD string for a given Date (local time). */
+function toDateString(d: Date): string {
+    return d.toLocaleDateString("en-CA"); // 'en-CA' gives YYYY-MM-DD natively
+}
+
 export default function ReservationSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-8%" });
     const [form, setForm] = useState<FormState>(INITIAL);
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Allowed booking window: today → today + 7 days
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDay = new Date(today);
+    maxDay.setDate(today.getDate() + 7);
+    const minDate = toDateString(today);
+    const maxDate = toDateString(maxDay);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -32,10 +48,42 @@ export default function ReservationSection() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        // ── Date range guard ──
+        if (form.date) {
+            const chosen = new Date(form.date + "T00:00:00"); // parse as local midnight
+            if (chosen < today) {
+                setError("Please choose a date from today onwards — we can't travel back in time!");
+                return;
+            }
+            if (chosen > maxDay) {
+                setError("Reservations can only be made up to 7 days in advance. Please pick a closer date.");
+                return;
+            }
+        }
+
         setLoading(true);
-        await new Promise((r) => setTimeout(r, 1600));
-        setLoading(false);
-        setSubmitted(true);
+        try {
+            await addDoc(collection(db, "reservation"), {
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                date: form.date,
+                time: form.time,
+                guests: Number(form.guests),
+                occasion: form.occasion,
+                notes: form.notes,
+                status: "pending",
+                createdAt: serverTimestamp(),
+            });
+            setSubmitted(true);
+        } catch (err) {
+            console.error("Reservation error:", err);
+            setError("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -277,6 +325,7 @@ export default function ReservationSection() {
 
                                     <FormField label="Preferred Date" id="res-date" name="date"
                                         type="date" required
+                                        min={minDate} max={maxDate}
                                         value={form.date} onChange={handleChange} />
 
                                     <FormField label="Preferred Time" id="res-time" name="time"
@@ -328,6 +377,22 @@ export default function ReservationSection() {
                                             style={{ ...fieldStyle, resize: "none", fontFamily: "var(--font-body)" }}
                                         />
                                     </div>
+
+                                    {/* Error message */}
+                                    {error && (
+                                        <div style={{
+                                            gridColumn: "1 / -1",
+                                            padding: "0.65rem 1rem",
+                                            borderRadius: "0.5rem",
+                                            background: "rgba(220,38,38,0.12)",
+                                            border: "1px solid rgba(220,38,38,0.25)",
+                                            color: "#f87171",
+                                            fontFamily: "var(--font-body)",
+                                            fontSize: "0.8rem",
+                                        }}>
+                                            {error}
+                                        </div>
+                                    )}
 
                                     {/* Submit — full width */}
                                     <div style={{ gridColumn: "1 / -1", marginTop: "0.5rem" }}>
@@ -416,11 +481,12 @@ function InfoBlock({ icon, label, lines }: {
 interface FieldProps {
     label: string; id: string; name: string; type: string;
     placeHolder?: string; required?: boolean;
+    min?: string; max?: string;
     value: string; onChange: React.ChangeEventHandler<HTMLInputElement>;
     colSpan?: boolean;
 }
 
-function FormField({ label, id, name, type, placeHolder, required, value, onChange, colSpan }: FieldProps) {
+function FormField({ label, id, name, type, placeHolder, required, min, max, value, onChange, colSpan }: FieldProps) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", ...(colSpan ? { gridColumn: "1 / -1" } : {}) }}>
             <label htmlFor={id} className="label-cinzel"
@@ -430,6 +496,7 @@ function FormField({ label, id, name, type, placeHolder, required, value, onChan
             <input
                 id={id} name={name} type={type}
                 placeholder={placeHolder} required={required}
+                min={min} max={max}
                 value={value} onChange={onChange}
                 style={{ ...fieldStyle, colorScheme: "dark" as React.CSSProperties["colorScheme"] }}
                 onFocus={(e) => (e.target.style.borderColor = "var(--gold-primary)")}
