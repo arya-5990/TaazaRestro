@@ -3,23 +3,33 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
-const TOTAL_FRAMES = 93;
-const FIRST_FRAME = 4;
-const frameUrl = (n: number) =>
-    `/food-1/ezgif-frame-${String(n).padStart(3, "0")}.png`;
-
 const SIGNATURE_ITEMS = [
-    { id: 1, name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice" },
-    { id: 2, name: "Shawarma", nameAccent: "Royale", subtitle: "Slow-roasted lamb · Arabic spice blend · Garlic toum", note: "From the Wood-fire Rotisserie", tag: "Most Loved" },
-    { id: 3, name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition" },
-    { id: 4, name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two" },
-    { id: 5, name: "Arabic", nameAccent: "Fusion Bowl", subtitle: "Saffron rice · Chicken · Za'atar oil · Feta", note: "East Meets West", tag: "New Season" },
+    {
+        id: 1, name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice",
+        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+    },
+    {
+        id: 2, name: "Shawarma", nameAccent: "Royale", subtitle: "Slow-roasted lamb · Arabic spice blend · Garlic toum", note: "From the Wood-fire Rotisserie", tag: "Most Loved",
+        frames: { folder: "food 2", total: 131, first: 1, ext: "jpg", fit: "contain" }
+    },
+    {
+        id: 3, name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition",
+        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+    },
+    {
+        id: 4, name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two",
+        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+    },
+    {
+        id: 5, name: "Arabic", nameAccent: "Fusion Bowl", subtitle: "Saffron rice · Chicken · Za'atar oil · Feta", note: "East Meets West", tag: "New Season",
+        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+    },
 ];
 
 export default function ExplodedHero() {
     const outerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const imagesRef = useRef<HTMLImageElement[]>([]);
+    const imagesRef = useRef<{ [slide: number]: HTMLImageElement[] }>({});
 
     const [frameIndex, setFrameIndex] = useState(0);
     const [activeSlide, setActiveSlide] = useState(0);
@@ -33,52 +43,66 @@ export default function ExplodedHero() {
         offset: ["start start", "end end"],
     });
 
-    const rawFrame = useTransform(scrollYProgress, [0, 1], [0, TOTAL_FRAMES - 1]);
-
     useEffect(() => {
-        return rawFrame.on("change", (v) => setFrameIndex(Math.round(v)));
-    }, [rawFrame]);
+        return scrollYProgress.on("change", (v) => {
+            const item = SIGNATURE_ITEMS[activeSlide];
+            setFrameIndex(Math.round(v * (item.frames.total - 1)));
+        });
+    }, [scrollYProgress, activeSlide]);
 
     /* ── Progressive frame preload ── */
     useEffect(() => {
-        imagesRef.current = [];
+        const item = SIGNATURE_ITEMS[activeSlide];
+        const TOTAL_FRAMES = item.frames.total;
+        const FIRST_FRAME = item.frames.first;
+
+        if (!imagesRef.current[activeSlide]) {
+            imagesRef.current[activeSlide] = [];
+        }
+
+        if (imagesRef.current[activeSlide].length > Math.min(15, TOTAL_FRAMES)) {
+            setImagesLoaded(true);
+            setFrameIndex(cur => cur);
+            return;
+        }
+
+        setImagesLoaded(false);
 
         const loadFrame = (i: number) => {
             const img = new window.Image();
-            img.src = frameUrl(FIRST_FRAME + i);
+            img.src = `/${item.frames.folder}/ezgif-frame-${String(FIRST_FRAME + i).padStart(3, "0")}.${item.frames.ext}`;
             img.onload = () => {
-                imagesRef.current[i] = img;
-                // Show the very first loaded frame immediately — don't wait for all 93
+                imagesRef.current[activeSlide][i] = img;
                 if (i === 0) setImagesLoaded(true);
-                // Repaint if this frame matches current scroll position
                 setFrameIndex((cur) => cur);
             };
         };
 
-        // First 15 frames — load immediately (visible on hero load)
         for (let i = 0; i < Math.min(15, TOTAL_FRAMES); i++) loadFrame(i);
 
-        // Remaining frames — load after 600ms so the critical frames win bandwidth
         const timer = setTimeout(() => {
             for (let i = 15; i < TOTAL_FRAMES; i++) loadFrame(i);
         }, 600);
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [activeSlide]);
 
     /* ── Draw frame → canvas with cover-fit crop ── */
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Use the requested frame if ready, otherwise fall back to the nearest
-        // loaded frame so the animation never freezes on a blank canvas
-        let img = imagesRef.current[frameIndex];
+        let img = imagesRef.current[activeSlide]?.[frameIndex];
         if (!img?.complete || !img.naturalWidth) {
-            // Walk backward to find the closest already-loaded frame
             for (let f = frameIndex - 1; f >= 0; f--) {
-                const candidate = imagesRef.current[f];
+                const candidate = imagesRef.current[activeSlide]?.[f];
                 if (candidate?.complete && candidate.naturalWidth) { img = candidate; break; }
+            }
+            if (!img?.complete || !img.naturalWidth) {
+                for (let f = frameIndex + 1; f < SIGNATURE_ITEMS[activeSlide].frames.total; f++) {
+                    const candidate = imagesRef.current[activeSlide]?.[f];
+                    if (candidate?.complete && candidate.naturalWidth) { img = candidate; break; }
+                }
             }
         }
         if (!img?.complete || !img.naturalWidth) return;
@@ -91,20 +115,50 @@ export default function ExplodedHero() {
         canvas.width = vw;
         canvas.height = vh;
 
+        const fit = SIGNATURE_ITEMS[activeSlide].frames.fit || "cover";
+
+        ctx.clearRect(0, 0, vw, vh);
+
+        // Calculate aspect ratios for "cover" logic (always needed for the background)
         const imgAspect = img.naturalWidth / img.naturalHeight;
         const canvasAspect = vw / vh;
-        let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+        let coverSw = img.naturalWidth;
+        let coverSh = img.naturalHeight;
+        let coverSx = 0;
+        let coverSy = 0;
 
         if (imgAspect > canvasAspect) {
-            sw = img.naturalHeight * canvasAspect;
-            sx = (img.naturalWidth - sw) / 2;
+            coverSw = img.naturalHeight * canvasAspect;
+            coverSx = (img.naturalWidth - coverSw) / 2;
         } else {
-            sh = img.naturalWidth / canvasAspect;
-            sy = (img.naturalHeight - sh) / 2;
+            coverSh = img.naturalWidth / canvasAspect;
+            coverSy = (img.naturalHeight - coverSh) / 2;
         }
-        ctx.clearRect(0, 0, vw, vh);
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, vw, vh);
-    }, [frameIndex, imagesLoaded]);
+
+        if (fit === "contain") {
+            const scale = Math.min(vw / img.naturalWidth, vh / img.naturalHeight);
+            const dw = img.naturalWidth * scale;
+            const dh = img.naturalHeight * scale;
+            let dx = (vw - dw) / 2;
+            const dy = (vh - dh) / 2;
+
+            // On larger landscape screens, align logic to the right to balance the text
+            if (vw > 768 && vw > vh) {
+                dx = vw - dw - (vw * 0.05); // 5% from right border
+            }
+
+            // 1. Draw blurred & dimmed 'cover' background to fill empty space
+            ctx.filter = "blur(20px) brightness(0.35)";
+            ctx.drawImage(img, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
+            ctx.filter = "none";
+
+            // 2. Draw actual full image
+            ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, dx, dy, dw, dh);
+        } else {
+            // Standard "cover" fit
+            ctx.drawImage(img, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
+        }
+    }, [frameIndex, imagesLoaded, activeSlide]);
 
     useEffect(() => {
         const onResize = () => setFrameIndex(f => f); // force redraw
