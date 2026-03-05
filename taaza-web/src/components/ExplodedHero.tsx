@@ -9,7 +9,7 @@ const SIGNATURE_ITEMS = [
         frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
     },
     {
-        id: 2, name: "Shawarma", nameAccent: "Royale", subtitle: "Slow-roasted lamb · Arabic spice blend · Garlic toum", note: "From the Wood-fire Rotisserie", tag: "Most Loved",
+        id: 2, name: "Taaza Cold", nameAccent: "Coffee", subtitle: "Rich espresso · Frothy milk · Signature syrup", note: "A Refreshing Classic", tag: "Fan Favorite",
         frames: { folder: "food 2", total: 131, first: 1, ext: "jpg", fit: "contain" }
     },
     {
