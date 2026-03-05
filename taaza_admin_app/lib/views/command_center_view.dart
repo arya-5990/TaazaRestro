@@ -2,7 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'live_reservations_view.dart';
 import 'menu_master_view.dart';
-import 'live_website_view.dart';
 import '../widgets/glass_bottom_nav.dart';
 import '../constants/app_colors.dart';
 
@@ -19,7 +18,6 @@ class _CommandCenterViewState extends State<CommandCenterView> {
   final List<Widget> _pages = [
     const LiveReservationsView(),
     const MenuMasterView(),
-    const LiveWebsiteView(),
   ];
 
   @override

@@ -6,7 +6,9 @@ class GlassBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
-  const GlassBottomNav({Key? key, required this.currentIndex, required this.onTap}) : super(key: key);
+  const GlassBottomNav(
+      {Key? key, required this.currentIndex, required this.onTap})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,8 @@ class GlassBottomNav extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8, bottom: 20),
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: AppColors.metallicGold.withOpacity(0.2), width: 1),
+                top: BorderSide(
+                    color: AppColors.metallicGold.withOpacity(0.2), width: 1),
               ),
             ),
             child: Row(
@@ -29,7 +32,6 @@ class GlassBottomNav extends StatelessWidget {
               children: [
                 _buildNavItem(Icons.book_online, "Reservations", 0),
                 _buildNavItem(Icons.menu_book, "Menu Master", 1),
-                _buildNavItem(Icons.web, "Live Site", 2),
               ],
             ),
           ),
@@ -47,10 +49,14 @@ class GlassBottomNav extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.metallicGold.withOpacity(0.15) : Colors.transparent,
+          color: isSelected
+              ? AppColors.metallicGold.withOpacity(0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.metallicGold.withOpacity(0.5) : Colors.transparent,
+            color: isSelected
+                ? AppColors.metallicGold.withOpacity(0.5)
+                : Colors.transparent,
           ),
         ),
         child: Column(
@@ -58,13 +64,17 @@ class GlassBottomNav extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.metallicGold : AppColors.offWhite.withOpacity(0.5),
+              color: isSelected
+                  ? AppColors.metallicGold
+                  : AppColors.offWhite.withOpacity(0.5),
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.metallicGold : AppColors.offWhite.withOpacity(0.5),
+                color: isSelected
+                    ? AppColors.metallicGold
+                    : AppColors.offWhite.withOpacity(0.5),
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),

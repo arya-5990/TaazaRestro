@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../view_models/reservations_view_model.dart';
-import '../models/reservation_model.dart';
 import '../widgets/reservation_card.dart';
 import '../widgets/custom_sliver_app_bar.dart';
 import '../constants/app_colors.dart';
