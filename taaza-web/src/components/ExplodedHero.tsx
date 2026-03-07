@@ -15,20 +15,20 @@ const SIGNATURE_ITEMS: SignatureItem[] = [
     },
     {
         id: 2, name: "Taaza Cold", nameAccent: "Coffee", subtitle: "Rich espresso · Frothy milk · Signature syrup", note: "A Refreshing Classic", tag: "Fan Favorite",
-        frames: { folder: "food 2", total: 131, first: 1, ext: "jpg", fit: "contain" }
+        frames: { folder: "food-2", total: 127, first: 1, ext: "png", fit: "cover" }
     },
     {
         id: 3, name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition",
-        frames: { folder: "drink-2", total: 212, first: 1, ext: "png", fit: "cover" }
+        frames: { folder: "food-3", total: 212, first: 1, ext: "png", fit: "cover" }
     },
     {
         id: 4, name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two",
-        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+        frames: { folder: "drink-1", total: 212, first: 1, ext: "png", fit: "cover" }
     },
-    {
-        id: 5, name: "Arabic", nameAccent: "Fusion Bowl", subtitle: "Saffron rice · Chicken · Za'atar oil · Feta", note: "East Meets West", tag: "New Season",
-        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
-    },
+    // {
+    //     id: 5, name: "Arabic", nameAccent: "Fusion Bowl", subtitle: "Saffron rice · Chicken · Za'atar oil · Feta", note: "East Meets West", tag: "New Season",
+    //     frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+    // },
 ];
 
 export default function ExplodedHero() {
@@ -323,9 +323,9 @@ export default function ExplodedHero() {
                                     opacity: 0.55,
                                     lineHeight: 1,
                                 }}
-                            >0{activeSlide + 1}</motion.span>
+                            >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
                         </AnimatePresence>
-                        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ 05</span>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(SIGNATURE_ITEMS.length).padStart(2, '0')}</span>
                     </div>
 
                     {/* Headline */}
