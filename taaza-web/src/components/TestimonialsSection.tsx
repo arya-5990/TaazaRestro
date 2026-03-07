@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -42,7 +42,7 @@ const testimonials = [
     { name: "Vijay Sharma", role: "Verified Guest", quote: "The chicken broast was fabulous and exceeded expectations. Great for health-conscious people.", rating: 5, initial: "V" },
 ];
 
-const CARDS_PER_SLIDE = 6;
+// Cards per slide handled dynamically in component
 
 const statHighlights = [
     { value: "200+", label: "Five-Star Reviews" },
@@ -76,7 +76,17 @@ export default function TestimonialsSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-8%" });
 
-    const totalSlides = Math.ceil(testimonials.length / CARDS_PER_SLIDE);
+    const [cardsPerSlide, setCardsPerSlide] = useState(6);
+
+    // Adjust cards per slide based on mobile viewport
+    useEffect(() => {
+        const handleResize = () => setCardsPerSlide(window.innerWidth < 768 ? 3 : 6);
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    const totalSlides = Math.ceil(testimonials.length / cardsPerSlide);
 
     const [page, setPage] = useState(0);
     const [direction, setDirection] = useState(1);
@@ -90,8 +100,8 @@ export default function TestimonialsSection() {
     const next = () => goTo(page + 1, 1);
 
     const pageCards = testimonials.slice(
-        page * CARDS_PER_SLIDE,
-        page * CARDS_PER_SLIDE + CARDS_PER_SLIDE
+        page * cardsPerSlide,
+        page * cardsPerSlide + cardsPerSlide
     );
 
     return (

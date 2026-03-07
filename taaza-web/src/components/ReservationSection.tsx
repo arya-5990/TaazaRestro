@@ -140,12 +140,7 @@ export default function ReservationSection() {
                 </motion.div>
 
                 {/* ── Two-column split layout ── */}
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1.4fr",
-                    gap: "4rem",
-                    alignItems: "start",
-                }}>
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-16 items-start">
 
                     {/* ════════════ LEFT PANEL — atmospheric info ════════════ */}
                     <motion.div
@@ -304,11 +299,7 @@ export default function ReservationSection() {
                                     onSubmit={handleSubmit}
                                     initial={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    style={{
-                                        position: "relative", zIndex: 1,
-                                        display: "grid", gridTemplateColumns: "1fr 1fr",
-                                        gap: "1.1rem",
-                                    }}
+                                    className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4"
                                 >
                                     {/* Full-width: Name */}
                                     <FormField label="Full Name" id="res-name" name="name"

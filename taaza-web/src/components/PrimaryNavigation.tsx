@@ -165,7 +165,7 @@ export default function PrimaryNavigation() {
                     <motion.button
                         onClick={() => scrollTo("#reserve")}
                         id="nav-book-btn"
-                        className="hidden md:flex btn-gold-outline"
+                        className="!hidden md:!flex btn-gold-outline"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.55, duration: 0.6 }}
@@ -181,7 +181,7 @@ export default function PrimaryNavigation() {
                         onClick={() => setMobileOpen((v) => !v)}
                         aria-label="Open navigation menu"
                         id="mobile-menu-toggle"
-                        className="flex md:hidden"
+                        className="!flex md:!hidden"
                         style={{
                             flexDirection: "column",
                             justifyContent: "center",

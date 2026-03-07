@@ -395,34 +395,37 @@ export default function ExplodedHero() {
                     />
 
                     {/* ── Vignette — light so food shows through everywhere ── */}
+                    {/* ── Vignette — Desktop ── */}
                     <div
                         aria-hidden="true"
+                        className="hidden md:block absolute inset-0 pointer-events-none"
                         style={{
-                            position: "absolute", inset: 0, pointerEvents: "none",
                             background: [
-                                /* radial dark corners */
-                                "radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(5,4,10,0.45) 100%)",
-                                /* left-side fade for text legibility */
-                                "linear-gradient(to right, rgba(5,4,10,0.70) 0%, rgba(5,4,10,0.30) 50%, transparent 100%)",
-                                /* very subtle bottom fade — only 30% opacity, NOT 90% */
-                                "linear-gradient(to top, rgba(5,4,10,0.55) 0%, transparent 35%)",
-                                /* top fade for nav */
-                                "linear-gradient(to bottom, rgba(5,4,10,0.40) 0%, transparent 20%)",
+                                "radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(5,4,10,0.65) 100%)",
+                                "linear-gradient(to right, rgba(5,4,10,0.75) 0%, rgba(5,4,10,0.20) 60%, transparent 100%)",
+                                "linear-gradient(to top, rgba(5,4,10,0.75) 0%, transparent 40%)",
+                                "linear-gradient(to bottom, rgba(5,4,10,0.60) 0%, transparent 20%)",
+                            ].join(", "),
+                        }}
+                    />
+                    {/* ── Vignette — Mobile ── */}
+                    <div
+                        aria-hidden="true"
+                        className="block md:hidden absolute inset-0 pointer-events-none"
+                        style={{
+                            background: [
+                                "radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(5,4,10,0.65) 100%)",
+                                "linear-gradient(to top, rgba(5,4,10,0.85) 0%, rgba(5,4,10,0.60) 40%, transparent 100%)",
+                                "linear-gradient(to bottom, rgba(5,4,10,0.60) 0%, transparent 20%)",
                             ].join(", "),
                         }}
                     />
 
-                    {/* ── Text overlay — left-center, clear of the dark zone ── */}
+                    {/* ── Text overlay — bottom-aligned on mobile, center-left on desktop ── */}
                     <div
+                        className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
                         style={{
-                            position: "absolute",
-                            inset: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",   /* vertically centered */
-                            paddingLeft: "clamp(2rem, 8vw, 6rem)",
-                            paddingBottom: "4rem",
-                            pointerEvents: "none",
+                            paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
                             maxWidth: "680px",
                         }}
                     >
