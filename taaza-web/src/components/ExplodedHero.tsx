@@ -1,9 +1,14 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, useScroll, AnimatePresence } from "framer-motion";
 
-const SIGNATURE_ITEMS = [
+interface SignatureItem {
+    id: number; name: string; nameAccent: string; subtitle: string; note: string; tag: string;
+    frames: { folder: string; total: number; first: number; ext: string; fit: string };
+}
+
+const SIGNATURE_ITEMS: SignatureItem[] = [
     {
         id: 1, name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice",
         frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
@@ -14,7 +19,7 @@ const SIGNATURE_ITEMS = [
     },
     {
         id: 3, name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition",
-        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
+        frames: { folder: "drink-2", total: 212, first: 1, ext: "png", fit: "cover" }
     },
     {
         id: 4, name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two",
@@ -30,8 +35,10 @@ export default function ExplodedHero() {
     const outerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const imagesRef = useRef<{ [slide: number]: HTMLImageElement[] }>({});
+    const frameIndexRef = useRef(0);
+    const rafIdRef = useRef<number>(0);
+    const canvasSizeRef = useRef({ w: 0, h: 0 });
 
-    const [frameIndex, setFrameIndex] = useState(0);
     const [activeSlide, setActiveSlide] = useState(0);
     const [direction, setDirection] = useState(1);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -43,12 +50,94 @@ export default function ExplodedHero() {
         offset: ["start start", "end end"],
     });
 
+    /* ── Ensure canvas matches viewport ── */
+    const ensureCanvasSize = useCallback(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return false;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        if (canvasSizeRef.current.w !== vw || canvasSizeRef.current.h !== vh) {
+            canvas.width = vw;
+            canvas.height = vh;
+            canvasSizeRef.current = { w: vw, h: vh };
+        }
+        return true;
+    }, []);
+
+    /* ── Draw image source to canvas with cover/contain ── */
+    const drawSource = useCallback((source: CanvasImageSource, sw: number, sh: number, fit: string) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const vw = canvas.width;
+        const vh = canvas.height;
+
+        ctx.clearRect(0, 0, vw, vh);
+
+        const imgAspect = sw / sh;
+        const canvasAspect = vw / vh;
+        let coverSw = sw, coverSh = sh, coverSx = 0, coverSy = 0;
+        if (imgAspect > canvasAspect) {
+            coverSw = sh * canvasAspect;
+            coverSx = (sw - coverSw) / 2;
+        } else {
+            coverSh = sw / canvasAspect;
+            coverSy = (sh - coverSh) / 2;
+        }
+
+        if (fit === "contain") {
+            const scale = Math.min(vw / sw, vh / sh);
+            const dw = sw * scale;
+            const dh = sh * scale;
+            let dx = (vw - dw) / 2;
+            const dy = (vh - dh) / 2;
+            if (vw > 768 && vw > vh) dx = vw - dw - (vw * 0.05);
+            ctx.filter = "blur(20px) brightness(0.35)";
+            ctx.drawImage(source, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
+            ctx.filter = "none";
+            ctx.drawImage(source, 0, 0, sw, sh, dx, dy, dw, dh);
+        } else {
+            ctx.drawImage(source, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
+        }
+    }, []);
+
+    /* ── Draw a single image frame to canvas ── */
+    const drawFrame = useCallback((idx: number, slide: number) => {
+        const item = SIGNATURE_ITEMS[slide];
+        if (!ensureCanvasSize()) return;
+
+        let img = imagesRef.current[slide]?.[idx];
+        if (!img?.complete || !img.naturalWidth) {
+            for (let f = idx - 1; f >= 0; f--) {
+                const c = imagesRef.current[slide]?.[f];
+                if (c?.complete && c.naturalWidth) { img = c; break; }
+            }
+            if (!img?.complete || !img.naturalWidth) {
+                for (let f = idx + 1; f < item.frames.total; f++) {
+                    const c = imagesRef.current[slide]?.[f];
+                    if (c?.complete && c.naturalWidth) { img = c; break; }
+                }
+            }
+        }
+        if (!img?.complete || !img.naturalWidth) return;
+        drawSource(img, img.naturalWidth, img.naturalHeight, item.frames.fit || "cover");
+    }, [ensureCanvasSize, drawSource]);
+
+    /* ── Scroll → rAF-throttled canvas draw ── */
     useEffect(() => {
         return scrollYProgress.on("change", (v) => {
             const item = SIGNATURE_ITEMS[activeSlide];
-            setFrameIndex(Math.round(v * (item.frames.total - 1)));
+            const newIdx = Math.round(v * (item.frames.total - 1));
+            if (newIdx !== frameIndexRef.current) {
+                frameIndexRef.current = newIdx;
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = requestAnimationFrame(() => {
+                    drawFrame(newIdx, activeSlide);
+                });
+            }
         });
-    }, [scrollYProgress, activeSlide]);
+    }, [scrollYProgress, activeSlide, drawFrame]);
 
     /* ── Progressive frame preload ── */
     useEffect(() => {
@@ -62,7 +151,7 @@ export default function ExplodedHero() {
 
         if (imagesRef.current[activeSlide].length > Math.min(15, TOTAL_FRAMES)) {
             setImagesLoaded(true);
-            setFrameIndex(cur => cur);
+            drawFrame(frameIndexRef.current, activeSlide);
             return;
         }
 
@@ -73,8 +162,10 @@ export default function ExplodedHero() {
             img.src = `/${item.frames.folder}/ezgif-frame-${String(FIRST_FRAME + i).padStart(3, "0")}.${item.frames.ext}`;
             img.onload = () => {
                 imagesRef.current[activeSlide][i] = img;
-                if (i === 0) setImagesLoaded(true);
-                setFrameIndex((cur) => cur);
+                if (i === 0) {
+                    setImagesLoaded(true);
+                    drawFrame(0, activeSlide);
+                }
             };
         };
 
@@ -85,86 +176,21 @@ export default function ExplodedHero() {
         }, 600);
 
         return () => clearTimeout(timer);
-    }, [activeSlide]);
+    }, [activeSlide, drawFrame]);
 
-    /* ── Draw frame → canvas with cover-fit crop ── */
+    /* ── On slide change, redraw first available frame ── */
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        let img = imagesRef.current[activeSlide]?.[frameIndex];
-        if (!img?.complete || !img.naturalWidth) {
-            for (let f = frameIndex - 1; f >= 0; f--) {
-                const candidate = imagesRef.current[activeSlide]?.[f];
-                if (candidate?.complete && candidate.naturalWidth) { img = candidate; break; }
-            }
-            if (!img?.complete || !img.naturalWidth) {
-                for (let f = frameIndex + 1; f < SIGNATURE_ITEMS[activeSlide].frames.total; f++) {
-                    const candidate = imagesRef.current[activeSlide]?.[f];
-                    if (candidate?.complete && candidate.naturalWidth) { img = candidate; break; }
-                }
-            }
-        }
-        if (!img?.complete || !img.naturalWidth) return;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        canvas.width = vw;
-        canvas.height = vh;
-
-        const fit = SIGNATURE_ITEMS[activeSlide].frames.fit || "cover";
-
-        ctx.clearRect(0, 0, vw, vh);
-
-        // Calculate aspect ratios for "cover" logic (always needed for the background)
-        const imgAspect = img.naturalWidth / img.naturalHeight;
-        const canvasAspect = vw / vh;
-        let coverSw = img.naturalWidth;
-        let coverSh = img.naturalHeight;
-        let coverSx = 0;
-        let coverSy = 0;
-
-        if (imgAspect > canvasAspect) {
-            coverSw = img.naturalHeight * canvasAspect;
-            coverSx = (img.naturalWidth - coverSw) / 2;
-        } else {
-            coverSh = img.naturalWidth / canvasAspect;
-            coverSy = (img.naturalHeight - coverSh) / 2;
-        }
-
-        if (fit === "contain") {
-            const scale = Math.min(vw / img.naturalWidth, vh / img.naturalHeight);
-            const dw = img.naturalWidth * scale;
-            const dh = img.naturalHeight * scale;
-            let dx = (vw - dw) / 2;
-            const dy = (vh - dh) / 2;
-
-            // On larger landscape screens, align logic to the right to balance the text
-            if (vw > 768 && vw > vh) {
-                dx = vw - dw - (vw * 0.05); // 5% from right border
-            }
-
-            // 1. Draw blurred & dimmed 'cover' background to fill empty space
-            ctx.filter = "blur(20px) brightness(0.35)";
-            ctx.drawImage(img, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
-            ctx.filter = "none";
-
-            // 2. Draw actual full image
-            ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, dx, dy, dw, dh);
-        } else {
-            // Standard "cover" fit
-            ctx.drawImage(img, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
-        }
-    }, [frameIndex, imagesLoaded, activeSlide]);
+        drawFrame(frameIndexRef.current, activeSlide);
+    }, [activeSlide, imagesLoaded, drawFrame]);
 
     useEffect(() => {
-        const onResize = () => setFrameIndex(f => f); // force redraw
+        const onResize = () => {
+            canvasSizeRef.current = { w: 0, h: 0 };
+            drawFrame(frameIndexRef.current, activeSlide);
+        };
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
-    }, []);
+    }, [activeSlide, drawFrame]);
 
     /* ── Slide nav ── */
     const navigateTo = (idx: number, dir: number) => {
