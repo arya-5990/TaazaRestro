@@ -9,6 +9,12 @@ import Image from "next/image";
 export default function ExperienceSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(sectionRef, { once: true, margin: "-10%" });
+    const imageVersion = "2026-03-08";
+    const imageFrame = {
+        interior: "center 55%",
+        chef: "center 38%",
+        terrace: "center 68%",
+    } as const;
 
     /* Parallax for images */
     const { scrollYProgress } = useScroll({
@@ -71,18 +77,19 @@ export default function ExperienceSection() {
 
                     {/* CELL 1 — Large image, tall */}
                     <motion.div
-                        className="relative overflow-hidden group"
-                        style={{ borderRadius: "2rem 0.5rem 2rem 0.5rem", minHeight: "520px" }}
+                        className="relative min-h-[420px] lg:min-h-[520px] overflow-hidden group"
+                        style={{ borderRadius: "2rem 0.5rem 2rem 0.5rem" }}
                         initial={{ opacity: 0, x: -50 }}
                         animate={isInView ? { opacity: 1, x: 0 } : {}}
                         transition={{ duration: 0.9, delay: 0.1 }}
                     >
-                        <motion.div className="absolute inset-0" style={{ y: imgY1 }}>
+                        <motion.div className="absolute inset-0" style={{ y: imgY1, scale: 1.04 }}>
                             <Image
-                                src="/interior.png"
+                                src={`/interior.png?v=${imageVersion}`}
                                 alt="Taaza restaurant dining room — ornate Arabic décor with warm amber lighting"
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                style={{ objectPosition: imageFrame.interior }}
                                 sizes="(max-width: 1024px) 100vw, 42vw"
                             />
                         </motion.div>
@@ -176,18 +183,19 @@ export default function ExperienceSection() {
                     {/* CELL 3 — Two images stacked */}
                     <div className="flex flex-col gap-4">
                         <motion.div
-                            className="relative overflow-hidden group flex-1"
-                            style={{ borderRadius: "0.5rem 2rem 0.5rem 0.5rem", minHeight: "280px" }}
+                            className="relative min-h-[300px] lg:min-h-[300px] overflow-hidden group flex-1"
+                            style={{ borderRadius: "0.5rem 2rem 0.5rem 0.5rem" }}
                             initial={{ opacity: 0, x: 50 }}
                             animate={isInView ? { opacity: 1, x: 0 } : {}}
                             transition={{ duration: 0.9, delay: 0.2 }}
                         >
-                            <motion.div className="absolute inset-0" style={{ y: imgY2 }}>
+                            <motion.div className="absolute inset-0" style={{ y: imgY2, scale: 1.07 }}>
                                 <Image
-                                    src="/chef.png"
+                                    src={`/chef.png?v=${imageVersion}`}
                                     alt="Chef plating a premium Arabic fusion dish with gold leaf"
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    style={{ objectPosition: imageFrame.chef }}
                                     sizes="(max-width: 1024px) 100vw, 33vw"
                                 />
                             </motion.div>
@@ -199,18 +207,19 @@ export default function ExperienceSection() {
                         </motion.div>
 
                         <motion.div
-                            className="relative overflow-hidden group"
-                            style={{ borderRadius: "0.5rem 0.5rem 2rem 0.5rem", minHeight: "220px" }}
+                            className="relative min-h-[280px] lg:min-h-[240px] overflow-hidden group"
+                            style={{ borderRadius: "0.5rem 0.5rem 2rem 0.5rem" }}
                             initial={{ opacity: 0, x: 50 }}
                             animate={isInView ? { opacity: 1, x: 0 } : {}}
                             transition={{ duration: 0.9, delay: 0.35 }}
                         >
-                            <motion.div className="absolute inset-0" style={{ y: imgY3 }}>
+                            <motion.div className="absolute inset-0" style={{ y: imgY3, scale: 1.06 }}>
                                 <Image
-                                    src="/terrace.png"
+                                    src={`/terrace.jpeg?v=${imageVersion}`}
                                     alt="Taaza restaurant terrace at golden hour with fairy lights"
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    style={{ objectPosition: imageFrame.terrace }}
                                     sizes="(max-width: 1024px) 100vw, 33vw"
                                 />
                             </motion.div>
