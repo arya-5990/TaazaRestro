@@ -2,34 +2,34 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion, useScroll, AnimatePresence } from "framer-motion";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-interface SignatureItem {
-    id: number; name: string; nameAccent: string; subtitle: string; note: string; tag: string;
-    frames: { folder: string; total: number; first: number; ext: string; fit: string };
+/* ── Static text per slide (order must match Firestore `order`) ── */
+interface SlideText {
+    name: string; nameAccent: string; subtitle: string; note: string; tag: string;
 }
 
-const SIGNATURE_ITEMS: SignatureItem[] = [
-    {
-        id: 1, name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice",
-        frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
-    },
-    {
-        id: 2, name: "Taaza Cold", nameAccent: "Coffee", subtitle: "Rich espresso · Frothy milk · Signature syrup", note: "A Refreshing Classic", tag: "Fan Favorite",
-        frames: { folder: "food-2", total: 127, first: 1, ext: "png", fit: "cover" }
-    },
-    {
-        id: 3, name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition",
-        frames: { folder: "food-3", total: 212, first: 1, ext: "png", fit: "cover" }
-    },
-    {
-        id: 4, name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two",
-        frames: { folder: "drink-1", total: 212, first: 1, ext: "png", fit: "cover" }
-    },
-    // {
-    //     id: 5, name: "Arabic", nameAccent: "Fusion Bowl", subtitle: "Saffron rice · Chicken · Za'atar oil · Feta", note: "East Meets West", tag: "New Season",
-    //     frames: { folder: "food-1", total: 93, first: 4, ext: "png", fit: "cover" }
-    // },
+const SLIDE_TEXT: SlideText[] = [
+    { name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice" },
+    { name: "Taaza Cold", nameAccent: "Coffee", subtitle: "Rich espresso · Frothy milk · Signature syrup", note: "A Refreshing Classic", tag: "Fan Favorite" },
+    { name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition" },
+    { name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two" },
 ];
+
+interface SignatureItem extends SlideText {
+    id: number;
+    frames: { cloudinaryFolder: string; total: number; first: number; ext: string; fit: string };
+}
+
+/* ── Cloudinary cloud name — public, used only for URL construction ── */
+const CLOUD_NAME = "dpvab3v9f";
+
+/** Build a Cloudinary URL with auto-format, auto-quality, and width transforms */
+function cloudinaryFrameUrl(folder: string, frameNum: number, ext: string, width = 1920) {
+    const paddedFrame = String(frameNum).padStart(3, "0");
+    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_${width}/${folder}/ezgif-frame-${paddedFrame}.${ext}`;
+}
 
 export default function ExplodedHero() {
     const outerRef = useRef<HTMLDivElement>(null);
@@ -39,6 +39,7 @@ export default function ExplodedHero() {
     const rafIdRef = useRef<number>(0);
     const canvasSizeRef = useRef({ w: 0, h: 0 });
 
+    const [signatureItems, setSignatureItems] = useState<SignatureItem[]>([]);
     const [activeSlide, setActiveSlide] = useState(0);
     const [direction, setDirection] = useState(1);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -47,6 +48,41 @@ export default function ExplodedHero() {
     /* ── Global initial loader state ── */
     const [siteLoaded, setSiteLoaded] = useState(false);
     const [loadProgress, setLoadProgress] = useState(0);
+    const [dataReady, setDataReady] = useState(false);
+
+    /* ── Fetch slide metadata from Firestore ── */
+    useEffect(() => {
+        (async () => {
+            try {
+                const q = query(collection(db, "hero_slides"), orderBy("order"));
+                const snap = await getDocs(q);
+                const items: SignatureItem[] = snap.docs.map((d, i) => {
+                    const data = d.data() as {
+                        cloudinaryFolder: string; totalFrames: number;
+                        firstFrame: number; ext: string; fit: string; order: number;
+                    };
+                    const text = SLIDE_TEXT[i % SLIDE_TEXT.length];
+                    return {
+                        ...text,
+                        id: i + 1,
+                        frames: {
+                            cloudinaryFolder: data.cloudinaryFolder,
+                            total: data.totalFrames,
+                            first: data.firstFrame,
+                            ext: data.ext,
+                            fit: data.fit || "cover",
+                        },
+                    };
+                });
+                if (items.length > 0) {
+                    setSignatureItems(items);
+                    setDataReady(true);
+                }
+            } catch (err) {
+                console.error("Failed to fetch hero slides:", err);
+            }
+        })();
+    }, []);
 
     /* ── Lock scroll until initial frames finish loading ── */
     useEffect(() => {
@@ -118,8 +154,9 @@ export default function ExplodedHero() {
 
     /* ── Draw a single image frame to canvas ── */
     const drawFrame = useCallback((idx: number, slide: number) => {
-        const item = SIGNATURE_ITEMS[slide];
-        if (!ensureCanvasSize()) return;
+        if (signatureItems.length === 0) return;
+        const item = signatureItems[slide];
+        if (!item || !ensureCanvasSize()) return;
 
         let img = imagesRef.current[slide]?.[idx];
         if (!img?.complete || !img.naturalWidth) {
@@ -136,12 +173,14 @@ export default function ExplodedHero() {
         }
         if (!img?.complete || !img.naturalWidth) return;
         drawSource(img, img.naturalWidth, img.naturalHeight, item.frames.fit || "cover");
-    }, [ensureCanvasSize, drawSource]);
+    }, [signatureItems, ensureCanvasSize, drawSource]);
 
     /* ── Scroll → rAF-throttled canvas draw ── */
     useEffect(() => {
+        if (signatureItems.length === 0) return;
         return scrollYProgress.on("change", (v) => {
-            const item = SIGNATURE_ITEMS[activeSlide];
+            const item = signatureItems[activeSlide];
+            if (!item) return;
             const newIdx = Math.round(v * (item.frames.total - 1));
             if (newIdx !== frameIndexRef.current) {
                 frameIndexRef.current = newIdx;
@@ -151,13 +190,17 @@ export default function ExplodedHero() {
                 });
             }
         });
-    }, [scrollYProgress, activeSlide, drawFrame]);
+    }, [scrollYProgress, activeSlide, signatureItems, drawFrame]);
 
-    /* ── Progressive frame preload ── */
+    /* ── Progressive frame preload from Cloudinary ── */
     useEffect(() => {
-        const item = SIGNATURE_ITEMS[activeSlide];
+        if (signatureItems.length === 0) return;
+        const item = signatureItems[activeSlide];
+        if (!item) return;
         const TOTAL_FRAMES = item.frames.total;
         const FIRST_FRAME = item.frames.first;
+        const folder = item.frames.cloudinaryFolder;
+        const ext = item.frames.ext;
 
         if (!imagesRef.current[activeSlide]) {
             imagesRef.current[activeSlide] = [];
@@ -171,7 +214,8 @@ export default function ExplodedHero() {
 
             const loadInitialFrame = (i: number) => {
                 const img = new window.Image();
-                img.src = `/${item.frames.folder}/ezgif-frame-${String(FIRST_FRAME + i).padStart(3, "0")}.${item.frames.ext}`;
+                img.crossOrigin = "anonymous";
+                img.src = cloudinaryFrameUrl(folder, FIRST_FRAME + i, ext);
                 img.onload = () => {
                     imagesRef.current[activeSlide][i] = img;
                     loadedCount++;
@@ -183,11 +227,11 @@ export default function ExplodedHero() {
                     if (loadedCount === TOTAL_FRAMES && !hasFinished) {
                         hasFinished = true;
                         setImagesLoaded(true);
-                        setTimeout(() => setSiteLoaded(true), 450); // Small pause at 100% before fading out
+                        setTimeout(() => setSiteLoaded(true), 450);
                     }
                 };
                 img.onerror = () => {
-                    loadedCount++; // Avoid getting stuck on error
+                    loadedCount++;
                     if (loadedCount === TOTAL_FRAMES && !hasFinished) {
                         hasFinished = true;
                         setImagesLoaded(true);
@@ -198,11 +242,12 @@ export default function ExplodedHero() {
 
             for (let i = 0; i < TOTAL_FRAMES; i++) loadInitialFrame(i);
 
-            // Pre-warm the first frame of other slides quietly in the background
-            SIGNATURE_ITEMS.forEach((sf, idx) => {
+            // Pre-warm first frame of other slides
+            signatureItems.forEach((sf, idx) => {
                 if (idx === 0) return;
                 const img = new window.Image();
-                img.src = `/${sf.frames.folder}/ezgif-frame-${String(sf.frames.first).padStart(3, "0")}.${sf.frames.ext}`;
+                img.crossOrigin = "anonymous";
+                img.src = cloudinaryFrameUrl(sf.frames.cloudinaryFolder, sf.frames.first, sf.frames.ext);
                 if (!imagesRef.current[idx]) imagesRef.current[idx] = [];
                 img.onload = () => { imagesRef.current[idx][0] = img; };
             });
@@ -226,7 +271,8 @@ export default function ExplodedHero() {
                 return;
             }
             const img = new window.Image();
-            img.src = `/${item.frames.folder}/ezgif-frame-${String(FIRST_FRAME + i).padStart(3, "0")}.${item.frames.ext}`;
+            img.crossOrigin = "anonymous";
+            img.src = cloudinaryFrameUrl(folder, FIRST_FRAME + i, ext);
             img.onload = () => {
                 imagesRef.current[activeSlide][i] = img;
                 if (i === 0) {
@@ -243,7 +289,7 @@ export default function ExplodedHero() {
         }, 600);
 
         return () => clearTimeout(timer);
-    }, [activeSlide, siteLoaded, drawFrame]);
+    }, [activeSlide, siteLoaded, signatureItems, drawFrame]);
 
     /* ── On slide change, redraw first available frame ── */
     useEffect(() => {
@@ -261,12 +307,11 @@ export default function ExplodedHero() {
 
     /* ── Slide nav ── */
     const navigateTo = (idx: number, dir: number) => {
-        if (isTransitioning) return;
+        if (isTransitioning || signatureItems.length === 0) return;
         setIsTransitioning(true);
         setDirection(dir);
         setActiveSlide(idx);
 
-        // Snap scroll back to the top of this section so the new slide effectively starts at frame 0
         if (outerRef.current) {
             window.scrollTo({
                 top: outerRef.current.offsetTop,
@@ -276,9 +321,9 @@ export default function ExplodedHero() {
 
         setTimeout(() => setIsTransitioning(false), 600);
     };
-    const goNext = () => navigateTo((activeSlide + 1) % SIGNATURE_ITEMS.length, 1);
-    const goPrev = () => navigateTo((activeSlide - 1 + SIGNATURE_ITEMS.length) % SIGNATURE_ITEMS.length, -1);
-    const current = SIGNATURE_ITEMS[activeSlide];
+    const goNext = () => navigateTo((activeSlide + 1) % signatureItems.length, 1);
+    const goPrev = () => navigateTo((activeSlide - 1 + signatureItems.length) % signatureItems.length, -1);
+    const current = signatureItems[activeSlide];
 
     const tv = {
         enter: (d: number) => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
@@ -336,7 +381,7 @@ export default function ExplodedHero() {
                                 textTransform: "uppercase"
                             }}
                         >
-                            Preparing Experience {loadProgress}%
+                            {dataReady ? `Preparing Experience ${loadProgress}%` : "Loading…"}
                         </motion.p>
                     </motion.div>
                 )}
@@ -394,7 +439,6 @@ export default function ExplodedHero() {
                         }}
                     />
 
-                    {/* ── Vignette — light so food shows through everywhere ── */}
                     {/* ── Vignette — Desktop ── */}
                     <div
                         aria-hidden="true"
@@ -422,140 +466,140 @@ export default function ExplodedHero() {
                     />
 
                     {/* ── Text overlay — bottom-aligned on mobile, center-left on desktop ── */}
-                    <div
-                        className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
-                        style={{
-                            paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
-                            maxWidth: "680px",
-                        }}
-                    >
-                        {/* Label */}
-                        <motion.div
-                            style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5, duration: 0.8 }}
+                    {current && (
+                        <div
+                            className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
+                            style={{
+                                paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
+                                maxWidth: "680px",
+                            }}
                         >
-                            <div style={{ width: "2.5rem", height: "1px", background: "var(--gold-primary)" }} />
-                            <span className="label-cinzel">Signature Collection</span>
-                        </motion.div>
+                            {/* Label */}
+                            <motion.div
+                                style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5, duration: 0.8 }}
+                            >
+                                <div style={{ width: "2.5rem", height: "1px", background: "var(--gold-primary)" }} />
+                                <span className="label-cinzel">Signature Collection</span>
+                            </motion.div>
 
-                        {/* Slide counter */}
-                        <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                            {/* Slide counter */}
+                            <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                                <AnimatePresence mode="wait" custom={direction}>
+                                    <motion.span
+                                        key={`num-${activeSlide}`}
+                                        custom={direction}
+                                        variants={tv}
+                                        initial="enter" animate="center" exit="exit"
+                                        transition={{ duration: 0.35 }}
+                                        style={{
+                                            fontFamily: "var(--font-serif)",
+                                            fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                                            fontWeight: 300,
+                                            color: "var(--gold-primary)",
+                                            opacity: 0.55,
+                                            lineHeight: 1,
+                                        }}
+                                    >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
+                                </AnimatePresence>
+                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(signatureItems.length).padStart(2, '0')}</span>
+                            </div>
+
+                            {/* Headline */}
                             <AnimatePresence mode="wait" custom={direction}>
-                                <motion.span
-                                    key={`num-${activeSlide}`}
+                                <motion.h1
+                                    key={`title-${activeSlide}`}
                                     custom={direction}
                                     variants={tv}
                                     initial="enter" animate="center" exit="exit"
-                                    transition={{ duration: 0.35 }}
-                                    style={{
-                                        fontFamily: "var(--font-serif)",
-                                        fontSize: "clamp(1.5rem, 3vw, 2rem)",
-                                        fontWeight: 300,
-                                        color: "var(--gold-primary)",
-                                        opacity: 0.55,
-                                        lineHeight: 1,
-                                    }}
-                                >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
-                            </AnimatePresence>
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(SIGNATURE_ITEMS.length).padStart(2, '0')}</span>
-                        </div>
-
-                        {/* Headline */}
-                        <AnimatePresence mode="wait" custom={direction}>
-                            <motion.h1
-                                key={`title-${activeSlide}`}
-                                custom={direction}
-                                variants={tv}
-                                initial="enter" animate="center" exit="exit"
-                                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
-                                className="headline-xl"
-                                style={{ lineHeight: 0.92, marginBottom: "0.85rem" }}
-                            >
-                                {current.name}{" "}
-                                <em className="flourish">{current.nameAccent}</em>
-                            </motion.h1>
-                        </AnimatePresence>
-
-                        {/* Subtitle */}
-                        <AnimatePresence mode="wait">
-                            <motion.p
-                                key={`sub-${activeSlide}`}
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                transition={{ duration: 0.35, delay: 0.08 }}
-                                style={{
-                                    fontFamily: "var(--font-body)", fontSize: "0.875rem",
-                                    color: "var(--text-secondary)", letterSpacing: "0.06em",
-                                    marginBottom: "0.3rem",
-                                }}
-                            >{current.subtitle}</motion.p>
-                        </AnimatePresence>
-
-                        {/* Note */}
-                        <AnimatePresence mode="wait">
-                            <motion.p
-                                key={`note-${activeSlide}`}
-                                initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} exit={{ opacity: 0 }}
-                                transition={{ duration: 0.35, delay: 0.12 }}
-                                className="flourish"
-                                style={{ fontSize: "0.9rem", color: "var(--gold-light)", marginBottom: "1.4rem" }}
-                            >— {current.note}</motion.p>
-                        </AnimatePresence>
-
-                        {/* Controls row — re-enable pointer events */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", pointerEvents: "auto", flexWrap: "wrap" }}>
-
-                            {/* Tag pill */}
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={`tag-${activeSlide}`}
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="glass-surface"
-                                    style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 1rem", borderRadius: "9999px" }}
+                                    transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+                                    className="headline-xl"
+                                    style={{ lineHeight: 0.92, marginBottom: "0.85rem" }}
                                 >
-                                    <span style={{ width: "0.35rem", height: "0.35rem", borderRadius: "50%", background: "var(--gold-primary)", display: "inline-block" }} />
-                                    <span className="label-cinzel" style={{ fontSize: "0.57rem" }}>{current.tag}</span>
-                                </motion.div>
+                                    {current.name}{" "}
+                                    <em className="flourish">{current.nameAccent}</em>
+                                </motion.h1>
                             </AnimatePresence>
 
-                            {/* Prev */}
-                            <ArrowBtn id="hero-prev-btn" onClick={goPrev} aria-label="Previous dish">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </ArrowBtn>
+                            {/* Subtitle */}
+                            <AnimatePresence mode="wait">
+                                <motion.p
+                                    key={`sub-${activeSlide}`}
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.08 }}
+                                    style={{
+                                        fontFamily: "var(--font-body)", fontSize: "0.875rem",
+                                        color: "var(--text-secondary)", letterSpacing: "0.06em",
+                                        marginBottom: "0.3rem",
+                                    }}
+                                >{current.subtitle}</motion.p>
+                            </AnimatePresence>
 
-                            {/* Next */}
-                            <ArrowBtn id="hero-next-btn" onClick={goNext} aria-label="Next dish">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                    <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                            </ArrowBtn>
+                            {/* Note */}
+                            <AnimatePresence mode="wait">
+                                <motion.p
+                                    key={`note-${activeSlide}`}
+                                    initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.12 }}
+                                    className="flourish"
+                                    style={{ fontSize: "0.9rem", color: "var(--gold-light)", marginBottom: "1.4rem" }}
+                                >— {current.note}</motion.p>
+                            </AnimatePresence>
 
-                            {/* Dot indicators */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                                {SIGNATURE_ITEMS.map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => navigateTo(i, i > activeSlide ? 1 : -1)}
-                                        aria-label={`Slide ${i + 1}`}
-                                        style={{
-                                            borderRadius: "9999px", height: "0.3rem", border: "none", cursor: "pointer",
-                                            width: i === activeSlide ? "1.4rem" : "0.3rem",
-                                            background: i === activeSlide ? "var(--gold-primary)" : "rgba(201,168,76,0.35)",
-                                            transition: "all 0.4s ease",
-                                        }}
-                                    />
-                                ))}
+                            {/* Controls row — re-enable pointer events */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", pointerEvents: "auto", flexWrap: "wrap" }}>
+
+                                {/* Tag pill */}
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={`tag-${activeSlide}`}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="glass-surface"
+                                        style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 1rem", borderRadius: "9999px" }}
+                                    >
+                                        <span style={{ width: "0.35rem", height: "0.35rem", borderRadius: "50%", background: "var(--gold-primary)", display: "inline-block" }} />
+                                        <span className="label-cinzel" style={{ fontSize: "0.57rem" }}>{current.tag}</span>
+                                    </motion.div>
+                                </AnimatePresence>
+
+                                {/* Prev */}
+                                <ArrowBtn id="hero-prev-btn" onClick={goPrev} aria-label="Previous dish">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </ArrowBtn>
+
+                                {/* Next */}
+                                <ArrowBtn id="hero-next-btn" onClick={goNext} aria-label="Next dish">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </ArrowBtn>
+
+                                {/* Dot indicators */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                                    {signatureItems.map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => navigateTo(i, i > activeSlide ? 1 : -1)}
+                                            aria-label={`Slide ${i + 1}`}
+                                            style={{
+                                                borderRadius: "9999px", height: "0.3rem", border: "none", cursor: "pointer",
+                                                width: i === activeSlide ? "1.4rem" : "0.3rem",
+                                                background: i === activeSlide ? "var(--gold-primary)" : "rgba(201,168,76,0.35)",
+                                                transition: "all 0.4s ease",
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-
+                    )}
 
                     {/* ── Scroll cue ── */}
                     <motion.div
