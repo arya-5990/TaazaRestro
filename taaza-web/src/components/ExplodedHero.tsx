@@ -1,90 +1,36 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, useScroll, AnimatePresence } from "framer-motion";
-import { collection, query, orderBy, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-/* ── Static text per slide (order must match Firestore `order`) ── */
-interface SlideText {
+/* ── Slide definitions ── */
+interface Slide {
+    id: number;
     name: string; nameAccent: string; subtitle: string; note: string; tag: string;
+    src: string;
 }
 
-const SLIDE_TEXT: SlideText[] = [
-    { name: "The Taaza", nameAccent: "Burger", subtitle: "Smash patty · Sumac aioli · Pickled jalapeño", note: "Our Signature Creation", tag: "Chef's Choice" },
-    { name: "Taaza Cold", nameAccent: "Coffee", subtitle: "Rich espresso · Frothy milk · Signature syrup", note: "A Refreshing Classic", tag: "Fan Favorite" },
-    { name: "Kofta", nameAccent: "Al Aseel", subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe", tag: "Tradition" },
-    { name: "Mezze", nameAccent: "Platter", subtitle: "Hummus · Mutabal · Fattoush · Warm pita", note: "To Share, To Savour", tag: "For Two" },
+const SLIDES: Slide[] = [
+    { id: 1, name: "The Taaza", nameAccent: "Burger",     subtitle: "Smash patty · Sumac aioli · Pickled jalapeño",         note: "Our Signature Creation", tag: "Chef's Choice", src: "/food1.mp4"  },
+    { id: 2, name: "Taaza Cold", nameAccent: "Coffee",    subtitle: "Rich espresso · Frothy milk · Signature syrup",        note: "A Refreshing Classic",   tag: "Fan Favorite",  src: "/drink1.mp4" },
+    { id: 3, name: "Kofta",      nameAccent: "Al Aseel",  subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe",     tag: "Tradition",     src: "/food2.mp4"  },
+    { id: 4, name: "Mezze",      nameAccent: "Platter",   subtitle: "Hummus · Mutabal · Fattoush · Warm pita",              note: "To Share, To Savour",    tag: "For Two",       src: "/food3.mp4"  },
 ];
 
-interface SignatureItem extends SlideText {
-    id: number;
-    frames: { cloudinaryFolder: string; total: number; first: number; ext: string; fit: string };
-}
-
-/* ── Cloudinary cloud name — public, used only for URL construction ── */
-const CLOUD_NAME = "dpvab3v9f";
-
-/** Build a Cloudinary URL with auto-format, auto-quality, and width transforms */
-function cloudinaryFrameUrl(folder: string, frameNum: number, ext: string, width = 1920) {
-    const paddedFrame = String(frameNum).padStart(3, "0");
-    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto,w_${width}/${folder}/ezgif-frame-${paddedFrame}.${ext}`;
-}
-
 export default function ExplodedHero() {
-    const outerRef = useRef<HTMLDivElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const imagesRef = useRef<{ [slide: number]: HTMLImageElement[] }>({});
-    const frameIndexRef = useRef(0);
-    const rafIdRef = useRef<number>(0);
-    const canvasSizeRef = useRef({ w: 0, h: 0 });
+    const sectionRef = useRef<HTMLDivElement>(null);
+    const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+    const isTransitioningRef = useRef(false);
 
-    const [signatureItems, setSignatureItems] = useState<SignatureItem[]>([]);
     const [activeSlide, setActiveSlide] = useState(0);
     const [direction, setDirection] = useState(1);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const [imagesLoaded, setImagesLoaded] = useState(false);
 
     /* ── Global initial loader state ── */
     const [siteLoaded, setSiteLoaded] = useState(false);
     const [loadProgress, setLoadProgress] = useState(0);
-    const [dataReady, setDataReady] = useState(false);
 
-    /* ── Fetch slide metadata from Firestore ── */
-    useEffect(() => {
-        (async () => {
-            try {
-                const q = query(collection(db, "hero_slides"), orderBy("order"));
-                const snap = await getDocs(q);
-                const items: SignatureItem[] = snap.docs.map((d, i) => {
-                    const data = d.data() as {
-                        cloudinaryFolder: string; totalFrames: number;
-                        firstFrame: number; ext: string; fit: string; order: number;
-                    };
-                    const text = SLIDE_TEXT[i % SLIDE_TEXT.length];
-                    return {
-                        ...text,
-                        id: i + 1,
-                        frames: {
-                            cloudinaryFolder: data.cloudinaryFolder,
-                            total: data.totalFrames,
-                            first: data.firstFrame,
-                            ext: data.ext,
-                            fit: data.fit || "cover",
-                        },
-                    };
-                });
-                if (items.length > 0) {
-                    setSignatureItems(items);
-                    setDataReady(true);
-                }
-            } catch (err) {
-                console.error("Failed to fetch hero slides:", err);
-            }
-        })();
-    }, []);
-
-    /* ── Lock scroll until initial frames finish loading ── */
+    /* ── Lock scroll until first video is ready ── */
     useEffect(() => {
         if (!siteLoaded) {
             document.body.style.overflow = "hidden";
@@ -94,236 +40,68 @@ export default function ExplodedHero() {
         return () => { document.body.style.overflow = ""; };
     }, [siteLoaded]);
 
-    /* ── Scroll: track the outer 300vh container ── */
-    const { scrollYProgress } = useScroll({
-        target: outerRef,
-        offset: ["start start", "end end"],
-    });
-
-    /* ── Ensure canvas matches viewport ── */
-    const ensureCanvasSize = useCallback(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return false;
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        if (canvasSizeRef.current.w !== vw || canvasSizeRef.current.h !== vh) {
-            canvas.width = vw;
-            canvas.height = vh;
-            canvasSizeRef.current = { w: vw, h: vh };
-        }
-        return true;
-    }, []);
-
-    /* ── Draw image source to canvas with cover/contain ── */
-    const drawSource = useCallback((source: CanvasImageSource, sw: number, sh: number, fit: string) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        const vw = canvas.width;
-        const vh = canvas.height;
-
-        ctx.clearRect(0, 0, vw, vh);
-
-        const imgAspect = sw / sh;
-        const canvasAspect = vw / vh;
-        let coverSw = sw, coverSh = sh, coverSx = 0, coverSy = 0;
-        if (imgAspect > canvasAspect) {
-            coverSw = sh * canvasAspect;
-            coverSx = (sw - coverSw) / 2;
-        } else {
-            coverSh = sw / canvasAspect;
-            coverSy = (sh - coverSh) / 2;
-        }
-
-        if (fit === "contain") {
-            const scale = Math.min(vw / sw, vh / sh);
-            const dw = sw * scale;
-            const dh = sh * scale;
-            let dx = (vw - dw) / 2;
-            const dy = (vh - dh) / 2;
-            if (vw > 768 && vw > vh) dx = vw - dw - (vw * 0.05);
-            ctx.filter = "blur(20px) brightness(0.35)";
-            ctx.drawImage(source, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
-            ctx.filter = "none";
-            ctx.drawImage(source, 0, 0, sw, sh, dx, dy, dw, dh);
-        } else {
-            ctx.drawImage(source, coverSx, coverSy, coverSw, coverSh, 0, 0, vw, vh);
-        }
-    }, []);
-
-    /* ── Draw a single image frame to canvas ── */
-    const drawFrame = useCallback((idx: number, slide: number) => {
-        if (signatureItems.length === 0) return;
-        const item = signatureItems[slide];
-        if (!item || !ensureCanvasSize()) return;
-
-        let img = imagesRef.current[slide]?.[idx];
-        if (!img?.complete || !img.naturalWidth) {
-            for (let f = idx - 1; f >= 0; f--) {
-                const c = imagesRef.current[slide]?.[f];
-                if (c?.complete && c.naturalWidth) { img = c; break; }
-            }
-            if (!img?.complete || !img.naturalWidth) {
-                for (let f = idx + 1; f < item.frames.total; f++) {
-                    const c = imagesRef.current[slide]?.[f];
-                    if (c?.complete && c.naturalWidth) { img = c; break; }
-                }
-            }
-        }
-        if (!img?.complete || !img.naturalWidth) return;
-        drawSource(img, img.naturalWidth, img.naturalHeight, item.frames.fit || "cover");
-    }, [signatureItems, ensureCanvasSize, drawSource]);
-
-    /* ── Scroll → rAF-throttled canvas draw ── */
+    /* ── Track first video loading progress then unlock the site ── */
     useEffect(() => {
-        if (signatureItems.length === 0) return;
-        return scrollYProgress.on("change", (v) => {
-            const item = signatureItems[activeSlide];
-            if (!item) return;
-            const newIdx = Math.round(v * (item.frames.total - 1));
-            if (newIdx !== frameIndexRef.current) {
-                frameIndexRef.current = newIdx;
-                cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = requestAnimationFrame(() => {
-                    drawFrame(newIdx, activeSlide);
-                });
-            }
+        const video = videoRefs.current[0];
+        if (!video) return;
+        let finished = false;
+
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            setLoadProgress(100);
+            setTimeout(() => setSiteLoaded(true), 450);
+        };
+
+        const handleProgress = () => {
+            if (!video.duration || video.buffered.length === 0) return;
+            const pct = Math.round((video.buffered.end(video.buffered.length - 1) / video.duration) * 100);
+            setLoadProgress(Math.min(pct, 99));
+        };
+
+        video.addEventListener("progress", handleProgress);
+        video.addEventListener("canplaythrough", finish);
+        const fallback = setTimeout(finish, 4000);
+
+        return () => {
+            video.removeEventListener("progress", handleProgress);
+            video.removeEventListener("canplaythrough", finish);
+            clearTimeout(fallback);
+        };
+    }, []);
+
+    /* ── On slide change, play the new video; auto-advance on end ── */
+    useEffect(() => {
+        videoRefs.current.forEach((v, i) => {
+            if (!v) return;
+            if (i === activeSlide) { v.currentTime = 0; v.play().catch(() => {}); }
+            else v.pause();
         });
-    }, [scrollYProgress, activeSlide, signatureItems, drawFrame]);
 
-    /* ── Progressive frame preload from Cloudinary ── */
-    useEffect(() => {
-        if (signatureItems.length === 0) return;
-        const item = signatureItems[activeSlide];
-        if (!item) return;
-        const TOTAL_FRAMES = item.frames.total;
-        const FIRST_FRAME = item.frames.first;
-        const folder = item.frames.cloudinaryFolder;
-        const ext = item.frames.ext;
-
-        if (!imagesRef.current[activeSlide]) {
-            imagesRef.current[activeSlide] = [];
-        }
-
-        // ── 1. Rigorous 100% preload for the very first slide ──
-        if (activeSlide === 0 && !siteLoaded) {
-            let loadedCount = 0;
-            let hasFinished = false;
-            setImagesLoaded(false);
-
-            const loadInitialFrame = (i: number) => {
-                const img = new window.Image();
-                img.crossOrigin = "anonymous";
-                img.src = cloudinaryFrameUrl(folder, FIRST_FRAME + i, ext);
-                img.onload = () => {
-                    imagesRef.current[activeSlide][i] = img;
-                    loadedCount++;
-                    const progress = Math.min(100, Math.round((loadedCount / TOTAL_FRAMES) * 100));
-                    setLoadProgress(progress);
-
-                    if (i === 0) drawFrame(0, activeSlide);
-
-                    if (loadedCount === TOTAL_FRAMES && !hasFinished) {
-                        hasFinished = true;
-                        setImagesLoaded(true);
-                        setTimeout(() => setSiteLoaded(true), 450);
-                    }
-                };
-                img.onerror = () => {
-                    loadedCount++;
-                    if (loadedCount === TOTAL_FRAMES && !hasFinished) {
-                        hasFinished = true;
-                        setImagesLoaded(true);
-                        setTimeout(() => setSiteLoaded(true), 450);
-                    }
-                };
-            };
-
-            for (let i = 0; i < TOTAL_FRAMES; i++) loadInitialFrame(i);
-
-            // Pre-warm first frame of other slides
-            signatureItems.forEach((sf, idx) => {
-                if (idx === 0) return;
-                const img = new window.Image();
-                img.crossOrigin = "anonymous";
-                img.src = cloudinaryFrameUrl(sf.frames.cloudinaryFolder, sf.frames.first, sf.frames.ext);
-                if (!imagesRef.current[idx]) imagesRef.current[idx] = [];
-                img.onload = () => { imagesRef.current[idx][0] = img; };
-            });
-            return;
-        }
-
-        // ── 2. Progressive loading for subsequent slides ──
-        if (imagesRef.current[activeSlide][0]) {
-            setImagesLoaded(true);
-            drawFrame(frameIndexRef.current, activeSlide);
-        } else {
-            setImagesLoaded(false);
-        }
-
-        const loadSubFrame = (i: number) => {
-            if (imagesRef.current[activeSlide][i]) {
-                if (i === 0) {
-                    setImagesLoaded(true);
-                    drawFrame(0, activeSlide);
-                }
-                return;
-            }
-            const img = new window.Image();
-            img.crossOrigin = "anonymous";
-            img.src = cloudinaryFrameUrl(folder, FIRST_FRAME + i, ext);
-            img.onload = () => {
-                imagesRef.current[activeSlide][i] = img;
-                if (i === 0) {
-                    setImagesLoaded(true);
-                    drawFrame(0, activeSlide);
-                }
-            };
-        };
-
-        for (let i = 0; i < Math.min(15, TOTAL_FRAMES); i++) loadSubFrame(i);
-
-        const timer = setTimeout(() => {
-            for (let i = 15; i < TOTAL_FRAMES; i++) loadSubFrame(i);
-        }, 600);
-
-        return () => clearTimeout(timer);
-    }, [activeSlide, siteLoaded, signatureItems, drawFrame]);
-
-    /* ── On slide change, redraw first available frame ── */
-    useEffect(() => {
-        drawFrame(frameIndexRef.current, activeSlide);
-    }, [activeSlide, imagesLoaded, drawFrame]);
-
-    useEffect(() => {
-        const onResize = () => {
-            canvasSizeRef.current = { w: 0, h: 0 };
-            drawFrame(frameIndexRef.current, activeSlide);
-        };
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
-    }, [activeSlide, drawFrame]);
+        const video = videoRefs.current[activeSlide];
+        if (!video) return;
+        const handleEnded = () => navigateTo((activeSlide + 1) % SLIDES.length, 1);
+        video.addEventListener("ended", handleEnded);
+        return () => video.removeEventListener("ended", handleEnded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeSlide]);
 
     /* ── Slide nav ── */
     const navigateTo = (idx: number, dir: number) => {
-        if (isTransitioning || signatureItems.length === 0) return;
+        if (isTransitioningRef.current) return;
+        isTransitioningRef.current = true;
         setIsTransitioning(true);
         setDirection(dir);
         setActiveSlide(idx);
 
-        if (outerRef.current) {
-            window.scrollTo({
-                top: outerRef.current.offsetTop,
-                behavior: "smooth"
-            });
-        }
-
-        setTimeout(() => setIsTransitioning(false), 600);
+        setTimeout(() => {
+            isTransitioningRef.current = false;
+            setIsTransitioning(false);
+        }, 600);
     };
-    const goNext = () => navigateTo((activeSlide + 1) % signatureItems.length, 1);
-    const goPrev = () => navigateTo((activeSlide - 1 + signatureItems.length) % signatureItems.length, -1);
-    const current = signatureItems[activeSlide];
+    const goNext = () => navigateTo((activeSlide + 1) % SLIDES.length, 1);
+    const goPrev = () => navigateTo((activeSlide - 1 + SLIDES.length) % SLIDES.length, -1);
+    const current = SLIDES[activeSlide];
 
     const tv = {
         enter: (d: number) => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
@@ -381,63 +159,37 @@ export default function ExplodedHero() {
                                 textTransform: "uppercase"
                             }}
                         >
-                            {dataReady ? `Preparing Experience ${loadProgress}%` : "Loading…"}
+                            {`Preparing Experience ${loadProgress}%`}
                         </motion.p>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/*
-          300vh outer = the scroll budget for the animation.
-          The inner sticky panel stays anchored to the top
-          while the user burns through that scroll space.
-        */}
             <div
-                ref={outerRef}
+                ref={sectionRef}
                 id="hero"
-                style={{ position: "relative", height: "300vh" }}
+                style={{ position: "relative", height: "100vh", overflow: "hidden" }}
             >
-                {/* ── Sticky viewport panel ── */}
-                <div
-                    style={{
-                        position: "sticky",
-                        top: 0,
-                        height: "100vh",
-                        width: "100%",
-                        overflow: "hidden",
-                    }}
-                >
-                    {/* Loading spinner */}
-                    {!imagesLoaded && (
-                        <div style={{
-                            position: "absolute", inset: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            background: "var(--obsidian)", zIndex: 0,
-                        }}>
-                            <motion.div
-                                style={{
-                                    width: 56, height: 56, borderRadius: "50%",
-                                    border: "1px solid var(--gold-primary)",
-                                    borderTopColor: "transparent",
-                                }}
-                                animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                            />
-                        </div>
-                    )}
-
-                    {/* ── Full-screen canvas ── */}
-                    <canvas
-                        ref={canvasRef}
-                        style={{
-                            position: "absolute",
-                            top: 0, left: 0,
-                            width: "100%", height: "100%",
-                            display: "block",
-                            opacity: imagesLoaded ? 1 : 0,
-                            transition: "opacity 0.5s ease",
-                        }}
-                    />
+                    {/* ── Video elements (one per slide, looping) ── */}
+                    {SLIDES.map((slide, i) => (
+                        <video
+                            key={slide.id}
+                            ref={(el) => { videoRefs.current[i] = el; }}
+                            src={slide.src}
+                            playsInline
+                            muted
+                            autoPlay={i === 0}
+                            preload="auto"
+                            style={{
+                                position: "absolute",
+                                top: 0, left: 0,
+                                width: "100%", height: "100%",
+                                objectFit: "cover",
+                                opacity: i === activeSlide ? 1 : 0,
+                                transition: "opacity 0.5s ease",
+                            }}
+                        />
+                    ))}
 
                     {/* ── Vignette — Desktop ── */}
                     <div
@@ -466,8 +218,7 @@ export default function ExplodedHero() {
                     />
 
                     {/* ── Text overlay — bottom-aligned on mobile, center-left on desktop ── */}
-                    {current && (
-                        <div
+                    <div
                             className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
                             style={{
                                 paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
@@ -504,7 +255,7 @@ export default function ExplodedHero() {
                                         }}
                                     >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
                                 </AnimatePresence>
-                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(signatureItems.length).padStart(2, '0')}</span>
+                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(SLIDES.length).padStart(2, '0')}</span>
                             </div>
 
                             {/* Headline */}
@@ -583,7 +334,7 @@ export default function ExplodedHero() {
 
                                 {/* Dot indicators */}
                                 <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                                    {signatureItems.map((_, i) => (
+                                    {SLIDES.map((_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => navigateTo(i, i > activeSlide ? 1 : -1)}
@@ -599,38 +350,6 @@ export default function ExplodedHero() {
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                    {/* ── Scroll cue ── */}
-                    <motion.div
-                        style={{
-                            position: "absolute", left: "1.25rem", top: "50%", transform: "translateY(-50%)",
-                            display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem",
-                        }}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1, duration: 0.8 }}
-                    >
-                        <span className="label-cinzel" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: "0.52rem" }}>
-                            Scroll to assemble
-                        </span>
-                        <div style={{ width: 1, height: "3.5rem", background: "linear-gradient(to bottom, transparent, var(--gold-primary), transparent)" }} />
-                        <motion.div
-                            style={{ width: "0.3rem", height: "0.3rem", borderRadius: "50%", background: "var(--gold-primary)" }}
-                            animate={{ y: [0, 8, 0] }}
-                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                        />
-                    </motion.div>
-
-                    {/* ── Scroll progress bar ── */}
-                    <motion.div
-                        style={{
-                            position: "absolute", bottom: 0, left: 0, right: 0, height: 2,
-                            background: "linear-gradient(to right, var(--gold-dark), var(--gold-primary), var(--gold-light))",
-                            scaleX: scrollYProgress,
-                            transformOrigin: "left",
-                        }}
-                    />
 
                     {/* ── Bottom section fade ── */}
                     <div
@@ -641,7 +360,6 @@ export default function ExplodedHero() {
                             pointerEvents: "none",
                         }}
                     />
-                </div>
             </div>
         </>
     );
