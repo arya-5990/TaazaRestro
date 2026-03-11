@@ -7,7 +7,6 @@ const NAV_LINKS = [
     { label: "Experience", href: "#experience" },
     { label: "Menu", href: "#menu" },
     { label: "Story", href: "#story" },
-    { label: "Reserve", href: "#reserve" },
 ];
 
 export default function PrimaryNavigation() {

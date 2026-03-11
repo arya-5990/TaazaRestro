@@ -108,7 +108,7 @@ export default function TestimonialsSection() {
         <section
             id="story"
             ref={sectionRef}
-            className="relative py-[var(--space-section)] overflow-hidden"
+            className="relative pt-[calc(var(--space-section)*0.4)] pb-[var(--space-section)] overflow-hidden"
         >
             {/* Background glow */}
             <div
