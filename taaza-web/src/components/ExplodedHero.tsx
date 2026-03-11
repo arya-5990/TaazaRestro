@@ -3,6 +3,9 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+/* ── Cache-buster: bump this string manually whenever you replace a video file ── */
+const CB = `?v=20260311`;
+
 /* ── Slide definitions ── */
 interface Slide {
     id: number;
@@ -11,10 +14,10 @@ interface Slide {
 }
 
 const SLIDES: Slide[] = [
-    { id: 1, name: "The Taaza", nameAccent: "Burger",     subtitle: "Smash patty · Sumac aioli · Pickled jalapeño",         note: "Our Signature Creation", tag: "Chef's Choice", src: "/food1.mp4"  },
-    { id: 2, name: "Taaza Cold", nameAccent: "Coffee",    subtitle: "Rich espresso · Frothy milk · Signature syrup",        note: "A Refreshing Classic",   tag: "Fan Favorite",  src: "/drink1.mp4" },
-    { id: 3, name: "Kofta",      nameAccent: "Al Aseel",  subtitle: "Grilled minced lamb · Rose harissa · Pomegranate glaze", note: "A Heritage Recipe",     tag: "Tradition",     src: "/food2.mp4"  },
-    { id: 4, name: "Mezze",      nameAccent: "Platter",   subtitle: "Hummus · Mutabal · Fattoush · Warm pita",              note: "To Share, To Savour",    tag: "For Two",       src: "/food3.mp4"  },
+    { id: 1, name: "The Swish", nameAccent: " Tawook", subtitle: "", note: "Our Signature Creation", tag: "Chef's Choice", src: `/food1.mp4${CB}` },
+    { id: 2, name: "Summer ", nameAccent: "favourites", subtitle: "", note: "A Refreshing Classic", tag: "Fan Favorite", src: `/drink1.mp4${CB}` },
+    { id: 3, name: "Irani ", nameAccent: "Kebab", subtitle: "", note: "A Heritage Recipe", tag: "Tradition", src: `/food2.mp4${CB}` },
+    { id: 4, name: "Fattoush", nameAccent: "Salad", subtitle: "", note: "To Share, To Savour", tag: "For Two", src: `/food3.mp4${CB}` },
 ];
 
 export default function ExplodedHero() {
@@ -74,7 +77,7 @@ export default function ExplodedHero() {
     useEffect(() => {
         videoRefs.current.forEach((v, i) => {
             if (!v) return;
-            if (i === activeSlide) { v.currentTime = 0; v.play().catch(() => {}); }
+            if (i === activeSlide) { v.currentTime = 0; v.play().catch(() => { }); }
             else v.pause();
         });
 
@@ -83,7 +86,7 @@ export default function ExplodedHero() {
         const handleEnded = () => navigateTo((activeSlide + 1) % SLIDES.length, 1);
         video.addEventListener("ended", handleEnded);
         return () => video.removeEventListener("ended", handleEnded);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSlide]);
 
     /* ── Slide nav ── */
@@ -170,196 +173,179 @@ export default function ExplodedHero() {
                 id="hero"
                 style={{ position: "relative", height: "100vh", overflow: "hidden" }}
             >
-                    {/* ── Video elements (one per slide, looping) ── */}
-                    {SLIDES.map((slide, i) => (
-                        <video
-                            key={slide.id}
-                            ref={(el) => { videoRefs.current[i] = el; }}
-                            src={slide.src}
-                            playsInline
-                            muted
-                            autoPlay={i === 0}
-                            preload="auto"
-                            style={{
-                                position: "absolute",
-                                top: 0, left: 0,
-                                width: "100%", height: "100%",
-                                objectFit: "cover",
-                                opacity: i === activeSlide ? 1 : 0,
-                                transition: "opacity 0.5s ease",
-                            }}
-                        />
-                    ))}
-
-                    {/* ── Vignette — Desktop ── */}
-                    <div
-                        aria-hidden="true"
-                        className="hidden md:block absolute inset-0 pointer-events-none"
+                {/* ── Video elements (one per slide) ── */}
+                {SLIDES.map((slide, i) => (
+                    <video
+                        key={slide.id}
+                        ref={(el) => { videoRefs.current[i] = el; }}
+                        src={slide.src}
+                        playsInline muted autoPlay={i === 0} preload="auto"
                         style={{
-                            background: [
-                                "radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(5,4,10,0.65) 100%)",
-                                "linear-gradient(to right, rgba(5,4,10,0.75) 0%, rgba(5,4,10,0.20) 60%, transparent 100%)",
-                                "linear-gradient(to top, rgba(5,4,10,0.75) 0%, transparent 40%)",
-                                "linear-gradient(to bottom, rgba(5,4,10,0.60) 0%, transparent 20%)",
-                            ].join(", "),
+                            position: "absolute",
+                            top: 0, left: 0,
+                            width: "100%", height: "100%",
+                            objectFit: "cover",
+                            opacity: i === activeSlide ? 1 : 0,
+                            transition: "opacity 0.5s ease",
                         }}
                     />
-                    {/* ── Vignette — Mobile ── */}
-                    <div
-                        aria-hidden="true"
-                        className="block md:hidden absolute inset-0 pointer-events-none"
-                        style={{
-                            background: [
-                                "radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(5,4,10,0.65) 100%)",
-                                "linear-gradient(to top, rgba(5,4,10,0.85) 0%, rgba(5,4,10,0.60) 40%, transparent 100%)",
-                                "linear-gradient(to bottom, rgba(5,4,10,0.60) 0%, transparent 20%)",
-                            ].join(", "),
-                        }}
-                    />
+                ))}
 
-                    {/* ── Text overlay — bottom-aligned on mobile, center-left on desktop ── */}
-                    <div
-                            className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
-                            style={{
-                                paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
-                                maxWidth: "680px",
-                            }}
+                {/* ── Vignette — left text shadow + thin top bar only, no bottom cover ── */}
+                <div
+                    aria-hidden="true"
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background: [
+                            "linear-gradient(to right, rgba(5,4,10,0.78) 0%, rgba(5,4,10,0.30) 45%, transparent 70%)",
+                            "linear-gradient(to bottom, rgba(5,4,10,0.55) 0%, transparent 18%)",
+                        ].join(", "),
+                    }}
+                />
+
+                {/* ── Text overlay — bottom-aligned on mobile, center-left on desktop ── */}
+                <div
+                    className="absolute inset-0 flex flex-col justify-end pb-32 md:justify-center md:pb-16 pointer-events-none z-10"
+                    style={{
+                        paddingLeft: "clamp(1.5rem, 5vw, 6rem)",
+                        maxWidth: "680px",
+                    }}
+                >
+                    {/* Label */}
+                    <motion.div
+                        style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5, duration: 0.8 }}
+                    >
+                        <div style={{ width: "2.5rem", height: "1px", background: "var(--gold-primary)" }} />
+                        <span className="label-cinzel">Signature Collection</span>
+                    </motion.div>
+
+                    {/* Slide counter */}
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                        <AnimatePresence mode="wait" custom={direction}>
+                            <motion.span
+                                key={`num-${activeSlide}`}
+                                custom={direction}
+                                variants={tv}
+                                initial="enter" animate="center" exit="exit"
+                                transition={{ duration: 0.35 }}
+                                style={{
+                                    fontFamily: "var(--font-serif)",
+                                    fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                                    fontWeight: 300,
+                                    color: "var(--gold-primary)",
+                                    opacity: 0.55,
+                                    lineHeight: 1,
+                                }}
+                            >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
+                        </AnimatePresence>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(SLIDES.length).padStart(2, '0')}</span>
+                    </div>
+
+                    {/* Headline */}
+                    <AnimatePresence mode="wait" custom={direction}>
+                        <motion.h1
+                            key={`title-${activeSlide}`}
+                            custom={direction}
+                            variants={tv}
+                            initial="enter" animate="center" exit="exit"
+                            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
+                            className="headline-xl"
+                            style={{ lineHeight: 0.92, marginBottom: "0.85rem" }}
                         >
-                            {/* Label */}
+                            {current.name}{" "}
+                            <em className="flourish">{current.nameAccent}</em>
+                        </motion.h1>
+                    </AnimatePresence>
+
+                    {/* Subtitle */}
+                    <AnimatePresence mode="wait">
+                        <motion.p
+                            key={`sub-${activeSlide}`}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            transition={{ duration: 0.35, delay: 0.08 }}
+                            style={{
+                                fontFamily: "var(--font-body)", fontSize: "0.875rem",
+                                color: "var(--text-secondary)", letterSpacing: "0.06em",
+                                marginBottom: "0.3rem",
+                            }}
+                        >{current.subtitle}</motion.p>
+                    </AnimatePresence>
+
+                    {/* Note */}
+                    <AnimatePresence mode="wait">
+                        <motion.p
+                            key={`note-${activeSlide}`}
+                            initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} exit={{ opacity: 0 }}
+                            transition={{ duration: 0.35, delay: 0.12 }}
+                            className="flourish"
+                            style={{ fontSize: "0.9rem", color: "var(--gold-light)", marginBottom: "1.4rem" }}
+                        >— {current.note}</motion.p>
+                    </AnimatePresence>
+
+                    {/* Controls row — re-enable pointer events */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", pointerEvents: "auto", flexWrap: "wrap" }}>
+
+                        {/* Tag pill */}
+                        <AnimatePresence mode="wait">
                             <motion.div
-                                style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.2rem" }}
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5, duration: 0.8 }}
+                                key={`tag-${activeSlide}`}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.3 }}
+                                className="glass-surface"
+                                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 1rem", borderRadius: "9999px" }}
                             >
-                                <div style={{ width: "2.5rem", height: "1px", background: "var(--gold-primary)" }} />
-                                <span className="label-cinzel">Signature Collection</span>
+                                <span style={{ width: "0.35rem", height: "0.35rem", borderRadius: "50%", background: "var(--gold-primary)", display: "inline-block" }} />
+                                <span className="label-cinzel" style={{ fontSize: "0.57rem" }}>{current.tag}</span>
                             </motion.div>
+                        </AnimatePresence>
 
-                            {/* Slide counter */}
-                            <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem", marginBottom: "0.5rem" }}>
-                                <AnimatePresence mode="wait" custom={direction}>
-                                    <motion.span
-                                        key={`num-${activeSlide}`}
-                                        custom={direction}
-                                        variants={tv}
-                                        initial="enter" animate="center" exit="exit"
-                                        transition={{ duration: 0.35 }}
-                                        style={{
-                                            fontFamily: "var(--font-serif)",
-                                            fontSize: "clamp(1.5rem, 3vw, 2rem)",
-                                            fontWeight: 300,
-                                            color: "var(--gold-primary)",
-                                            opacity: 0.55,
-                                            lineHeight: 1,
-                                        }}
-                                    >{String(activeSlide + 1).padStart(2, '0')}</motion.span>
-                                </AnimatePresence>
-                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-muted)" }}>/ {String(SLIDES.length).padStart(2, '0')}</span>
-                            </div>
+                        {/* Prev */}
+                        <ArrowBtn id="hero-prev-btn" onClick={goPrev} aria-label="Previous dish">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </ArrowBtn>
 
-                            {/* Headline */}
-                            <AnimatePresence mode="wait" custom={direction}>
-                                <motion.h1
-                                    key={`title-${activeSlide}`}
-                                    custom={direction}
-                                    variants={tv}
-                                    initial="enter" animate="center" exit="exit"
-                                    transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
-                                    className="headline-xl"
-                                    style={{ lineHeight: 0.92, marginBottom: "0.85rem" }}
-                                >
-                                    {current.name}{" "}
-                                    <em className="flourish">{current.nameAccent}</em>
-                                </motion.h1>
-                            </AnimatePresence>
+                        {/* Next */}
+                        <ArrowBtn id="hero-next-btn" onClick={goNext} aria-label="Next dish">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </ArrowBtn>
 
-                            {/* Subtitle */}
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={`sub-${activeSlide}`}
-                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.35, delay: 0.08 }}
+                        {/* Dot indicators */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                            {SLIDES.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => navigateTo(i, i > activeSlide ? 1 : -1)}
+                                    aria-label={`Slide ${i + 1}`}
                                     style={{
-                                        fontFamily: "var(--font-body)", fontSize: "0.875rem",
-                                        color: "var(--text-secondary)", letterSpacing: "0.06em",
-                                        marginBottom: "0.3rem",
+                                        borderRadius: "9999px", height: "0.3rem", border: "none", cursor: "pointer",
+                                        width: i === activeSlide ? "1.4rem" : "0.3rem",
+                                        background: i === activeSlide ? "var(--gold-primary)" : "rgba(201,168,76,0.35)",
+                                        transition: "all 0.4s ease",
                                     }}
-                                >{current.subtitle}</motion.p>
-                            </AnimatePresence>
-
-                            {/* Note */}
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={`note-${activeSlide}`}
-                                    initial={{ opacity: 0 }} animate={{ opacity: 0.8 }} exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.35, delay: 0.12 }}
-                                    className="flourish"
-                                    style={{ fontSize: "0.9rem", color: "var(--gold-light)", marginBottom: "1.4rem" }}
-                                >— {current.note}</motion.p>
-                            </AnimatePresence>
-
-                            {/* Controls row — re-enable pointer events */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", pointerEvents: "auto", flexWrap: "wrap" }}>
-
-                                {/* Tag pill */}
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={`tag-${activeSlide}`}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.8 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="glass-surface"
-                                        style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 1rem", borderRadius: "9999px" }}
-                                    >
-                                        <span style={{ width: "0.35rem", height: "0.35rem", borderRadius: "50%", background: "var(--gold-primary)", display: "inline-block" }} />
-                                        <span className="label-cinzel" style={{ fontSize: "0.57rem" }}>{current.tag}</span>
-                                    </motion.div>
-                                </AnimatePresence>
-
-                                {/* Prev */}
-                                <ArrowBtn id="hero-prev-btn" onClick={goPrev} aria-label="Previous dish">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                </ArrowBtn>
-
-                                {/* Next */}
-                                <ArrowBtn id="hero-next-btn" onClick={goNext} aria-label="Next dish">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                </ArrowBtn>
-
-                                {/* Dot indicators */}
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                                    {SLIDES.map((_, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => navigateTo(i, i > activeSlide ? 1 : -1)}
-                                            aria-label={`Slide ${i + 1}`}
-                                            style={{
-                                                borderRadius: "9999px", height: "0.3rem", border: "none", cursor: "pointer",
-                                                width: i === activeSlide ? "1.4rem" : "0.3rem",
-                                                background: i === activeSlide ? "var(--gold-primary)" : "rgba(201,168,76,0.35)",
-                                                transition: "all 0.4s ease",
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
+                                />
+                            ))}
                         </div>
+                    </div>
+                </div>
 
-                    {/* ── Bottom section fade ── */}
-                    <div
-                        aria-hidden="true"
-                        style={{
-                            position: "absolute", bottom: 0, left: 0, right: 0, height: "5rem",
-                            background: "linear-gradient(to top, var(--obsidian), transparent)",
-                            pointerEvents: "none",
-                        }}
-                    />
+                {/* ── Bottom section fade ── */}
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, height: "5rem",
+                        background: "linear-gradient(to top, var(--obsidian), transparent)",
+                        pointerEvents: "none",
+                    }}
+                />
             </div>
         </>
     );

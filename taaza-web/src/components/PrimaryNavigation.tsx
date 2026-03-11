@@ -74,7 +74,7 @@ export default function PrimaryNavigation() {
                     }}
                 >
 
-                    {/* ── Logo / Wordmark ── */}
+                    {/* ── Logo (Brand Recreation) ── */}
                     <motion.a
                         href="#"
                         onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
@@ -84,29 +84,52 @@ export default function PrimaryNavigation() {
                             textDecoration: "none",
                             display: "flex",
                             flexDirection: "column",
-                            alignItems: "flex-start",
+                            alignItems: "center",
                             gap: "0.15rem",
                             flexShrink: 0,
                         }}
                     >
-                        <span style={{
-                            fontFamily: "var(--font-display)",
-                            fontSize: "1.3rem",
-                            letterSpacing: "0.2em",
-                            color: "var(--gold-primary)",
-                            lineHeight: 1,
-                        }}>
-                            TAAZA
-                        </span>
-                        <span style={{
-                            fontFamily: "var(--font-serif)",
-                            fontStyle: "italic",
-                            fontSize: "0.58rem",
-                            letterSpacing: "0.3em",
-                            color: "rgba(232,201,122,0.65)",
-                            lineHeight: 1,
-                        }}>
-                            Arabic Fusion
+                        {/* Red Fez Hat — centered above wordmark */}
+                        <img
+                            src="/Red_hat.png"
+                            alt=""
+                            aria-hidden="true"
+                            style={{
+                                height: scrolled ? "30px" : "38px",
+                                width: "auto",
+                                objectFit: "contain",
+                                transition: "height 0.4s ease",
+                                filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.5))",
+                                marginBottom: "-6px",
+                                marginTop: "-4px",
+                            }}
+                        />
+
+                        {/* Wordmark: Taaza + Restaurant */}
+                        <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.08rem", lineHeight: 1 }}>
+                            <span style={{
+                                fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                fontWeight: 800,
+                                fontSize: scrolled ? "1.1rem" : "1.35rem",
+                                letterSpacing: "0.01em",
+                                color: "#FFFFFF",
+                                transition: "font-size 0.4s ease",
+                                lineHeight: 1,
+                            }}>
+                                Taaza
+                            </span>
+                            <span style={{
+                                fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                fontWeight: 400,
+                                fontSize: scrolled ? "0.42rem" : "0.5rem",
+                                letterSpacing: "0.25em",
+                                color: "rgba(210,210,210,0.70)",
+                                textTransform: "uppercase",
+                                transition: "font-size 0.4s ease",
+                                lineHeight: 1,
+                            }}>
+                                Restaurant
+                            </span>
                         </span>
                     </motion.a>
 
