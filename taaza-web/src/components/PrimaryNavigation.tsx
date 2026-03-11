@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
     { label: "Experience", href: "#experience" },
     { label: "Menu", href: "#menu" },
     { label: "Story", href: "#story" },
+    { label: "Gallery", href: "/gallery" },
 ];
 
 export default function PrimaryNavigation() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const handler = () => setScrolled(window.scrollY > 60);
@@ -21,7 +24,11 @@ export default function PrimaryNavigation() {
 
     const scrollTo = (href: string) => {
         setMobileOpen(false);
-        document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+        if (href.startsWith("/")) {
+            router.push(href);
+        } else {
+            document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+        }
     };
 
     return (

@@ -191,7 +191,7 @@ export default function ExperienceSection() {
                         >
                             <motion.div className="absolute inset-0" style={{ y: imgY2, scale: 1.07 }}>
                                 <Image
-                                    src={`/chef.png?v=${imageVersion}`}
+                                    src={`/chef.jpeg?v=${imageVersion}`}
                                     alt="Chef plating a premium Arabic fusion dish with gold leaf"
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
