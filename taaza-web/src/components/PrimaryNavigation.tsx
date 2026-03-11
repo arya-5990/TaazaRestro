@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
@@ -14,7 +14,9 @@ const NAV_LINKS = [
 export default function PrimaryNavigation() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState<string>("");
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         const handler = () => setScrolled(window.scrollY > 60);
@@ -22,10 +24,46 @@ export default function PrimaryNavigation() {
         return () => window.removeEventListener("scroll", handler);
     }, []);
 
+    // Track which section is currently in view (home page only)
+    useEffect(() => {
+        if (pathname !== "/") return;
+        const sectionIds = ["experience", "menu", "story"];
+        const observers: IntersectionObserver[] = [];
+        const ratios: Record<string, number> = {};
+
+        sectionIds.forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const obs = new IntersectionObserver(
+                ([entry]) => {
+                    ratios[id] = entry.intersectionRatio;
+                    // Pick the section with the highest intersection ratio
+                    const best = Object.entries(ratios).sort((a, b) => b[1] - a[1])[0];
+                    if (best && best[1] > 0.15) setActiveSection(`#${best[0]}`);
+                    else if (Object.values(ratios).every((r) => r === 0)) setActiveSection("");
+                },
+                { threshold: [0, 0.15, 0.3, 0.5, 0.75, 1] }
+            );
+            obs.observe(el);
+            observers.push(obs);
+        });
+
+        return () => observers.forEach((o) => o.disconnect());
+    }, [pathname]);
+
+    // Determine if a given nav link is the active one
+    const isActive = (href: string) => {
+        if (href.startsWith("/")) return pathname === href;          // e.g. /gallery
+        return activeSection === href;                                // e.g. #experience
+    };
+
     const scrollTo = (href: string) => {
         setMobileOpen(false);
         if (href.startsWith("/")) {
             router.push(href);
+        } else if (pathname !== "/") {
+            // On sub-pages (e.g. /gallery), navigate home first then scroll
+            router.push(`/${href}`);
         } else {
             document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
         }
@@ -82,8 +120,8 @@ export default function PrimaryNavigation() {
 
                     {/* ── Logo (Brand Recreation) ── */}
                     <motion.a
-                        href="#"
-                        onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        href="/"
+                        onClick={(e) => { e.preventDefault(); if (pathname === "/") { window.scrollTo({ top: 0, behavior: "smooth" }); } else { router.push("/"); } }}
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
                         style={{
@@ -148,46 +186,63 @@ export default function PrimaryNavigation() {
                             gap: "2.75rem",
                         }}
                     >
-                        {NAV_LINKS.map((link, i) => (
-                            <motion.button
-                                key={link.href}
-                                onClick={() => scrollTo(link.href)}
-                                aria-label={`Navigate to ${link.label}`}
-                                initial={{ opacity: 0, y: -8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.12 + i * 0.08, duration: 0.55 }}
-                                whileHover={{ color: "#C9A84C" }}
-                                style={{
-                                    fontFamily: "var(--font-display)",
-                                    fontSize: "0.6rem",
-                                    letterSpacing: "0.22em",
-                                    textTransform: "uppercase",
-                                    color: "rgba(232,201,122,0.80)",
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    padding: "0.25rem 0",
-                                    position: "relative",
-                                    lineHeight: 1,
-                                    transition: "color 0.3s ease",
-                                }}
-                            >
-                                {link.label}
-                                {/* Animated underline */}
-                                <motion.span
-                                    initial={{ scaleX: 0 }}
-                                    whileHover={{ scaleX: 1 }}
-                                    transition={{ duration: 0.3, ease: "easeOut" }}
+                        {NAV_LINKS.map((link, i) => {
+                            const active = isActive(link.href);
+                            return (
+                                <motion.button
+                                    key={link.href}
+                                    onClick={() => scrollTo(link.href)}
+                                    aria-label={`Navigate to ${link.label}`}
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.12 + i * 0.08, duration: 0.55 }}
+                                    whileHover={{ color: "#C9A84C" }}
                                     style={{
-                                        position: "absolute",
-                                        bottom: 0, left: 0, right: 0,
-                                        height: "1px",
-                                        background: "var(--gold-primary)",
-                                        transformOrigin: "left",
+                                        fontFamily: "var(--font-display)",
+                                        fontSize: "0.6rem",
+                                        letterSpacing: "0.22em",
+                                        textTransform: "uppercase",
+                                        color: "rgba(232,201,122,0.80)",
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: "0.25rem 0",
+                                        position: "relative",
+                                        lineHeight: 1,
+                                        transition: "color 0.3s ease",
                                     }}
-                                />
-                            </motion.button>
-                        ))}
+                                >
+                                    {link.label}
+                                    {/* Active underline (white) + hover underline (gold) */}
+                                    <motion.span
+                                        animate={{ scaleX: active ? 1 : 0 }}
+                                        transition={{ duration: 0.35, ease: "easeOut" }}
+                                        style={{
+                                            position: "absolute",
+                                            bottom: 0, left: 0, right: 0,
+                                            height: "1px",
+                                            background: "#ffffff",
+                                            transformOrigin: "left",
+                                        }}
+                                    />
+                                    {/* Hover underline (gold, only when not active) */}
+                                    {!active && (
+                                        <motion.span
+                                            initial={{ scaleX: 0 }}
+                                            whileHover={{ scaleX: 1 }}
+                                            transition={{ duration: 0.3, ease: "easeOut" }}
+                                            style={{
+                                                position: "absolute",
+                                                bottom: 0, left: 0, right: 0,
+                                                height: "1px",
+                                                background: "var(--gold-primary)",
+                                                transformOrigin: "left",
+                                            }}
+                                        />
+                                    )}
+                                </motion.button>
+                            );
+                        })}
                     </nav>
 
                     {/* ── "Book Table" CTA (hidden on mobile) ── */}
