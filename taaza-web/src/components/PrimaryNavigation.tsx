@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const NAV_LINKS = [
     { label: "Experience", href: "#experience" },
     { label: "Menu", href: "#menu" },
-    { label: "Story", href: "#story" },
+    { label: "Testimonials", href: "#story" },
     { label: "Gallery", href: "/gallery" },
 ];
 
@@ -246,7 +246,7 @@ export default function PrimaryNavigation() {
                     </nav>
 
                     {/* ── "Book Table" CTA (hidden on mobile) ── */}
-                    <motion.button
+                    {/* <motion.button
                         onClick={() => scrollTo("#reserve")}
                         id="nav-book-btn"
                         className="!hidden md:!flex btn-gold-outline"
@@ -258,7 +258,7 @@ export default function PrimaryNavigation() {
                         style={{ flexShrink: 0 }}
                     >
                         Book Table
-                    </motion.button>
+                    </motion.button> */}
 
                     {/* ── Mobile hamburger (visible only on mobile) ── */}
                     <button
