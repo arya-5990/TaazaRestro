@@ -407,21 +407,21 @@ function ReelsPlayer({ isInView, onOpenModal }: { isInView: boolean; onOpenModal
                 pointerEvents: "none",
             }} />
 
-            {/* ── VIBE button — top-right ── */}
+            {/* ── VIBE button — top-left ── */}
             <button
                 id="reel-vibe-btn"
                 onClick={() => onOpenModal(activeReel)}
                 aria-label="Open Vibe fullscreen player"
                 style={{
-                    position: "absolute", top: "0.75rem", right: "0.75rem", zIndex: 20,
-                    display: "flex", alignItems: "center", gap: "0.35rem",
-                    padding: "0.3rem 0.75rem 0.3rem 0.55rem",
+                    position: "absolute", top: "0.85rem", left: "0.85rem", zIndex: 20,
+                    display: "flex", alignItems: "center", gap: "0.45rem",
+                    padding: "0.45rem 1rem 0.45rem 0.75rem",
                     borderRadius: "9999px",
                     border: "1px solid rgba(201,168,76,0.6)",
                     background: "rgba(5,4,10,0.65)", backdropFilter: "blur(10px)",
                     color: "var(--gold-primary)", cursor: "pointer",
                     fontFamily: "var(--font-display, 'Cinzel', serif)",
-                    fontSize: "0.55rem", letterSpacing: "0.15em", textTransform: "uppercase",
+                    fontSize: "0.7rem", letterSpacing: "0.15em", textTransform: "uppercase",
                     fontWeight: 600, transition: "all 0.25s ease",
                 }}
                 onMouseEnter={e => {
@@ -435,42 +435,46 @@ function ReelsPlayer({ isInView, onOpenModal }: { isInView: boolean; onOpenModal
                     b.style.borderColor = "rgba(201,168,76,0.6)"; b.style.transform = "scale(1)";
                 }}
             >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                 </svg>
                 Vibe
             </button>
 
-            {/* UP button */}
-            <button onClick={goPrev} aria-label="Previous reel" style={{
-                position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -340%)", zIndex: 10,
-                width: "2.1rem", height: "2.1rem", borderRadius: "50%",
-                border: "1px solid rgba(201,168,76,0.6)", background: "rgba(5,4,10,0.6)",
-                backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "var(--gold-primary)", transition: "all 0.25s ease",
-            }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--gold-primary)"; (e.currentTarget as HTMLButtonElement).style.color = "#05040a"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(5,4,10,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--gold-primary)"; }}
-            >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6" /></svg>
-            </button>
+            {/* UP / DOWN navigation — left side */}
+            <div style={{
+                position: "absolute", left: "0.85rem", top: "50%", transform: "translateY(-50%)",
+                zIndex: 10, display: "flex", flexDirection: "column", gap: "0.5rem"
+            }}>
+                {/* UP button */}
+                <button onClick={goPrev} aria-label="Previous reel" style={{
+                    width: "2.1rem", height: "2.1rem", borderRadius: "50%",
+                    border: "1px solid rgba(201,168,76,0.6)", background: "rgba(5,4,10,0.6)",
+                    backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: "var(--gold-primary)", transition: "all 0.25s ease",
+                }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--gold-primary)"; (e.currentTarget as HTMLButtonElement).style.color = "#05040a"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(5,4,10,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--gold-primary)"; }}
+                >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6" /></svg>
+                </button>
 
-            {/* DOWN button */}
-            <button onClick={goNext} aria-label="Next reel" style={{
-                position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, 240%)", zIndex: 10,
-                width: "2.1rem", height: "2.1rem", borderRadius: "50%",
-                border: "1px solid rgba(201,168,76,0.6)", background: "rgba(5,4,10,0.6)",
-                backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "var(--gold-primary)", transition: "all 0.25s ease",
-            }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--gold-primary)"; (e.currentTarget as HTMLButtonElement).style.color = "#05040a"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(5,4,10,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--gold-primary)"; }}
-            >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-            </button>
+                {/* DOWN button */}
+                <button onClick={goNext} aria-label="Next reel" style={{
+                    width: "2.1rem", height: "2.1rem", borderRadius: "50%",
+                    border: "1px solid rgba(201,168,76,0.6)", background: "rgba(5,4,10,0.6)",
+                    backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
+                    cursor: "pointer", color: "var(--gold-primary)", transition: "all 0.25s ease",
+                }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "var(--gold-primary)"; (e.currentTarget as HTMLButtonElement).style.color = "#05040a"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(5,4,10,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--gold-primary)"; }}
+                >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+            </div>
 
-            {/* Counter top-left */}
-            <div style={{ position: "absolute", top: "0.85rem", left: "0.85rem", zIndex: 10 }}>
+            {/* Counter top-right */}
+            <div style={{ position: "absolute", top: "0.85rem", right: "0.85rem", zIndex: 10 }}>
                 <span style={{
                     fontFamily: "var(--font-display, 'Cinzel', serif)", fontSize: "0.6rem",
                     letterSpacing: "0.18em", color: "var(--gold-primary)", textTransform: "uppercase",

@@ -1,12 +1,35 @@
 "use client";
 
+
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 
 const footerNav = {
-    Discover: ["The Menu", "Chef's Table", "Private Dining", "Catering & Events"],
-    Experience: ["Reserve a Table", "Gift Vouchers", "Loyalty Programme", "Seasonal Menus"],
-    Connect: ["Our Story", "Press & Media", "Careers", "Contact Us"],
+    Discover: [
+        { label: "The Menu", href: "/#menu" },
+        { label: "Chef's Table", href: "/#hero" },
+        // { label: "Private Dining", href: "#" },
+        // { label: "Catering & Events", href: "#" },
+    ],
+    Experience: [
+        // { label: "Reserve a Table", href: "#" },
+        // { label: "Gift Vouchers", href: "#" },
+        // { label: "Loyalty Programme", href: "#" },
+        // { label: "Seasonal Menus", href: "#" },
+        { label: "Testimonials", href: "/#story" },
+        { label: "Food", href: "/gallery" },
+        { label: "Vibe", href: "/#experience" },
+        { label: "Ambience", href: "/#experience" },
+    ],
+    Connect: [
+        // { label: "Our Story", href: "/#story" },
+        // { label: "Press & Media", href: "#" },
+        // { label: "Careers", href: "#" },
+        // { label: "Contact Us", href: "#" },
+        { label: "Instagram", href: "https://www.instagram.com/taazaindore/" },
+        { label: "Swiggy", href: "https://www.swiggy.com/city/indore/taaza-restaurant-ab-road-vijay-nagar-rest642525" },
+        { label: "Zomato", href: "http://zoma.to/r/20493103" },
+    ],
 };
 
 const socialLinks = [
@@ -47,18 +70,35 @@ export default function SiteFooter() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.7 }}
                         >
-                            <span
-                                style={{ fontFamily: "var(--font-display)" }}
-                                className="text-3xl tracking-[0.2em] text-[var(--gold-primary)]"
-                            >
-                                TAAZA
-                            </span>
-                            <p
-                                style={{ fontFamily: "var(--font-serif)", fontStyle: "italic" }}
-                                className="text-[var(--text-muted)] text-sm mt-1 mb-5"
-                            >
-                                Arabic Fusion
-                            </p>
+                            <div className="inline-flex flex-col items-center gap-1 mb-6">
+                                <img
+                                    src="/Red_hat.png"
+                                    alt="Taaza Logo"
+                                    className="h-11 w-auto object-contain drop-shadow-md -mb-1.5"
+                                    style={{ transform: "translateX(-1.9rem)" }}
+                                />
+                                <span className="flex flex-col items-center gap-[0.08rem] leading-none">
+                                    <span style={{
+                                        fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                        fontWeight: 800,
+                                        fontSize: "1.6rem",
+                                        letterSpacing: "0.01em",
+                                        color: "#FFFFFF",
+                                    }}>
+                                        Taaza
+                                    </span>
+                                    <span style={{
+                                        fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                        fontWeight: 400,
+                                        fontSize: "0.55rem",
+                                        letterSpacing: "0.25em",
+                                        color: "var(--text-muted)",
+                                        textTransform: "uppercase",
+                                    }}>
+                                        Restaurant
+                                    </span>
+                                </span>
+                            </div>
                             <div className="gold-rule mb-6" />
                             <p
                                 style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem" }}
@@ -72,7 +112,7 @@ export default function SiteFooter() {
                             <div className="mt-8 space-y-3">
                                 {[
                                     { Icon: MapPin, text: "Shop No. LG-4, Exotica Lower Ground Floor, Shalimar Township, AB Road, Indore, MP 452010" },
-                                    { Icon: Phone, text: "+91 731 XXX XXXX" },
+                                    { Icon: Phone, text: "+91 9039623792" },
                                     { Icon: Mail, text: "reserve@taazaindore.in" },
                                 ].map(({ Icon, text }) => (
                                     <div key={text} className="flex items-start gap-3 group">
@@ -111,17 +151,16 @@ export default function SiteFooter() {
                             <p className="label-cinzel text-[var(--gold-primary)] mb-6">{title}</p>
                             <ul className="space-y-3">
                                 {links.map((link) => (
-                                    <li key={link}>
+                                    <li key={link.label}>
                                         <a
-                                            href="#"
-                                            onClick={(e) => e.preventDefault()}
+                                            href={link.href}
                                             className="text-[var(--text-secondary)] hover:text-[var(--gold-light)] transition-colors duration-300 text-sm relative group inline-flex items-center gap-1.5"
                                             style={{ fontFamily: "var(--font-body)" }}
                                         >
                                             <span
                                                 className="inline-block w-0 h-px bg-[var(--gold-primary)] group-hover:w-3 transition-all duration-300"
                                             />
-                                            {link}
+                                            {link.label}
                                         </a>
                                     </li>
                                 ))}

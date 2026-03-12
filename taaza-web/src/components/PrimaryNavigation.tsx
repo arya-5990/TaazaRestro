@@ -133,7 +133,7 @@ export default function PrimaryNavigation() {
                             flexShrink: 0,
                         }}
                     >
-                        {/* Red Fez Hat — centered above wordmark */}
+                        {/* Red Fez Hat — placed over 'T' */}
                         <img
                             src="/Red_hat.png"
                             alt=""
@@ -142,10 +142,11 @@ export default function PrimaryNavigation() {
                                 height: scrolled ? "30px" : "38px",
                                 width: "auto",
                                 objectFit: "contain",
-                                transition: "height 0.4s ease",
+                                transition: "all 0.4s ease",
                                 filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.5))",
                                 marginBottom: "-6px",
                                 marginTop: "-4px",
+                                transform: scrolled ? "translateX(-1.35rem)" : "translateX(-1.6rem)",
                             }}
                         />
 
