@@ -139,23 +139,23 @@ export default function PrimaryNavigation() {
                             alt=""
                             aria-hidden="true"
                             style={{
-                                height: scrolled ? "30px" : "38px",
+                                height: scrolled ? "39px" : "50px",
                                 width: "auto",
                                 objectFit: "contain",
                                 transition: "all 0.4s ease",
                                 filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.5))",
-                                marginBottom: "-6px",
-                                marginTop: "-4px",
-                                transform: scrolled ? "translateX(-1.35rem)" : "translateX(-1.6rem)",
+                                marginBottom: "-8px",
+                                marginTop: "-6px",
+                                transform: scrolled ? "translateX(-1.75rem)" : "translateX(-2.1rem)",
                             }}
                         />
 
                         {/* Wordmark: Taaza + Restaurant */}
-                        <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.08rem", lineHeight: 1 }}>
+                        <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.1rem", lineHeight: 1 }}>
                             <span style={{
                                 fontFamily: "'Montserrat', 'Inter', sans-serif",
                                 fontWeight: 800,
-                                fontSize: scrolled ? "1.1rem" : "1.35rem",
+                                fontSize: scrolled ? "1.45rem" : "1.8rem",
                                 letterSpacing: "0.01em",
                                 color: "#FFFFFF",
                                 transition: "font-size 0.4s ease",
@@ -166,7 +166,7 @@ export default function PrimaryNavigation() {
                             <span style={{
                                 fontFamily: "'Montserrat', 'Inter', sans-serif",
                                 fontWeight: 400,
-                                fontSize: scrolled ? "0.42rem" : "0.5rem",
+                                fontSize: scrolled ? "0.55rem" : "0.65rem",
                                 letterSpacing: "0.25em",
                                 color: "rgba(210,210,210,0.70)",
                                 textTransform: "uppercase",

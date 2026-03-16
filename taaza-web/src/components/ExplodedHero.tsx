@@ -14,7 +14,7 @@ interface Slide {
 }
 
 const SLIDES: Slide[] = [
-    { id: 1, name: "The Swish", nameAccent: " Tawook", subtitle: "", note: "Our Signature Creation", tag: "Chef's Choice", src: `/food1.mp4${CB}` },
+    { id: 1, name: "The Shish", nameAccent: " Tawook", subtitle: "", note: "Our Signature Creation", tag: "Chef's Choice", src: `/food1.mp4${CB}` },
     { id: 2, name: "Summer ", nameAccent: "favourites", subtitle: "", note: "A Refreshing Classic", tag: "Fan Favorite", src: `/drink1.mp4${CB}` },
     { id: 3, name: "Irani ", nameAccent: "Kebab", subtitle: "", note: "A Heritage Recipe", tag: "Tradition", src: `/food2.mp4${CB}` },
     { id: 4, name: "Fattoush", nameAccent: "Salad", subtitle: "", note: "To Share, To Savour", tag: "For Two", src: `/food3.mp4${CB}` },
@@ -128,21 +128,57 @@ export default function ExplodedHero() {
                             alignItems: "center", justifyContent: "center",
                         }}
                     >
-                        <motion.h1
+                        <motion.div
                             style={{
-                                fontFamily: "var(--font-serif)",
-                                fontSize: "clamp(3rem, 8vw, 6rem)",
-                                fontWeight: 300,
-                                lineHeight: 1,
-                                marginBottom: "2rem",
-                                letterSpacing: "0.05em",
-                                color: "var(--gold-primary)"
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: "0.3rem",
+                                marginBottom: "2.5rem",
                             }}
                             animate={{ opacity: [0.6, 1, 0.6] }}
                             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                         >
-                            TAAZA
-                        </motion.h1>
+                            {/* Red Fez Hat — scaled up for loading screen */}
+                            <img
+                                src="/Red_hat.png"
+                                alt=""
+                                aria-hidden="true"
+                                style={{
+                                    height: "clamp(55px, 12vw, 90px)",
+                                    width: "auto",
+                                    objectFit: "contain",
+                                    filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.5))",
+                                    marginBottom: "-15px",
+                                    transform: "translateX(-clamp(3.5rem, 9.6vw, 7rem))",
+                                }}
+                            />
+
+                            {/* Wordmark: Taaza + Restaurant */}
+                            <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem", lineHeight: 1 }}>
+                                <span style={{
+                                    fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                    fontWeight: 800,
+                                    fontSize: "clamp(3rem, 8vw, 6rem)",
+                                    letterSpacing: "0.01em",
+                                    color: "#FFFFFF",
+                                    lineHeight: 1,
+                                }}>
+                                    Taaza
+                                </span>
+                                <span style={{
+                                    fontFamily: "'Montserrat', 'Inter', sans-serif",
+                                    fontWeight: 400,
+                                    fontSize: "clamp(0.9rem, 2.5vw, 1.8rem)",
+                                    letterSpacing: "0.25em",
+                                    color: "rgba(210,210,210,0.70)",
+                                    textTransform: "uppercase",
+                                    lineHeight: 1,
+                                }}>
+                                    Restaurant
+                                </span>
+                            </span>
+                        </motion.div>
 
                         <div style={{ width: "200px", height: "1px", background: "rgba(201,168,76,0.2)", position: "relative", overflow: "hidden" }}>
                             <motion.div

@@ -1,6 +1,6 @@
 # Taaza — Premium Arabic Fusion Restaurant Website
 
-The official website for **Taaza**, a premium Arabic fusion restaurant located in Indore, India. The site delivers an immersive, luxury dining experience online — featuring a scroll-driven frame animation hero, an interactive full-menu modal, live table reservations via Firestore, and a refined design system built for high-end hospitality.
+The official website for **Taaza**, a premium Arabic fusion restaurant located in Indore, India. The site delivers an immersive, luxury dining experience online — featuring a scroll-driven frame animation hero, short-form video reels, an interactive full-menu modal, a dedicated photo gallery, and a refined design system built for high-end hospitality.
 
 ---
 
@@ -59,7 +59,10 @@ Taaza ("fresh" in Arabic) blends ancient Levantine culinary traditions with cont
 ```
 taaza-web/
 ├── public/
-│   └── social_media_and_delivery_partner/   # Zomato, Swiggy logos; social icons
+│   ├── food/                                # Food photography for the Gallery page
+│   ├── ambience/                            # Ambience photography for the Gallery page
+│   ├── reels/                               # Short-form video files (reel_1.mp4 … reel_9.mp4)
+│   └── social_media_and_delivery_partner/   # Zomato, Swiggy, Instagram logos; social icons
 ├── scripts/
 │   ├── upload-hero-slides.mts               # One-time: upload hero frames + save Firestore metadata
 │   └── upload-all-frames.mts               # Bulk: upload all animation frames to Cloudinary
@@ -67,15 +70,18 @@ taaza-web/
     ├── app/
     │   ├── globals.css                      # Design tokens, font-faces, utility classes
     │   ├── layout.tsx                       # Root HTML layout (metadata, fonts)
-    │   └── page.tsx                         # Single-page composition (all sections)
+    │   ├── page.tsx                         # Single-page composition (all sections)
+    │   └── gallery/
+    │       ├── page.tsx                     # Server component — reads food/ and ambience/ from public/
+    │       └── GalleryClient.tsx            # Client component — tabs, masonry grid, lightbox
     ├── components/
     │   ├── PrimaryNavigation.tsx            # Fixed header with mobile drawer nav
     │   ├── ExplodedHero.tsx                 # Scroll-driven frame animation hero
-    │   ├── ExperienceSection.tsx            # Bento grid with parallax images + story
+    │   ├── ExperienceSection.tsx            # Reels player + parallax images + story
     │   ├── MenuSection.tsx                  # Featured 6-item menu grid
     │   ├── MenuBookModal.tsx                # Animated 4-page full menu modal
     │   ├── TestimonialsSection.tsx          # Paginated 30-review carousel
-    │   ├── ReservationSection.tsx           # Table booking form → Firestore
+    │   ├── ReservationSection.tsx           # Table booking form (not active on main page)
     │   └── SiteFooter.tsx                   # Footer with map, links, social icons
     └── lib/
         ├── cloudinary.ts                    # Server-side signed upload helper
@@ -86,17 +92,18 @@ taaza-web/
 
 ## Pages & Sections
 
-The website is a **single-page application**. All sections live on one scrollable page and are composed in `src/app/page.tsx`.
+The main route (`/`) is a **single-page application**. All core sections are composed in `src/app/page.tsx`. An additional `/gallery` page provides a dedicated photo gallery experience.
 
 ### 1. Navigation — `PrimaryNavigation`
 
 A fixed header that sits over every section.
 
-- Logo wordmark ("TAAZA · Arabic Fusion") scrolls to top on click
-- Desktop links: **Experience**, **Menu**, **Story**, **Reserve** — each smooth-scrolls to the corresponding section
-- **"Book Table"** CTA button
+- Logo: red fez hat icon + "Taaza" wordmark + "Restaurant" sub-label; scrolls to top (`/`) on click
+- Desktop links: **Experience**, **Menu**, **Testimonials**, **Gallery** — the first three smooth-scroll to the corresponding section; **Gallery** navigates to `/gallery`
 - Mobile: hamburger icon opens a full-screen overlay drawer with a circular clip-path reveal animation
-- Background transitions from transparent gradient to a solid frosted-glass blur once the user scrolls past 60 px
+- Background transitions from transparent gradient to solid frosted-glass blur once the user scrolls past 60 px
+- Active link is underlined with a white rule; hovered inactive links show a gold underline
+- On sub-pages (e.g. `/gallery`) clicking a hash link navigates home first, then scrolls to the section
 
 ---
 
@@ -116,12 +123,22 @@ The signature feature of the site. A **300vh** scroll container that plays a fra
 
 ### 3. Experience — `ExperienceSection`
 
-An asymmetric **bento grid** that showcases the restaurant's atmosphere.
+A 3-column asymmetric grid that showcases the restaurant's atmosphere.
 
-- Three high-quality images (interior, chef plating, terrace) with parallax scroll offsets
+**Column 1 — Inline reels player (`ReelsPlayer`)**
+- Plays 9 short-form portrait videos (`/reels/reel_1.mp4` … `/reel_9.mp4`) in sequence, autoplay when the section enters the viewport
+- Up/down navigation buttons + dot indicators; reels advance automatically on end
+- Mute/unmute toggle; reel counter badge (01/09)
+- **"Vibe"** button opens a fullscreen shorts-style modal (`ShortsModal`) — TikTok-style swipe/scroll/keyboard navigation across all 9 reels, with animated slide transitions and branding overlay
+
+**Column 2 — Story card + testimonial card**
 - Story copy: *"Born from ancient spice routes"*
-- Floating pull-quote from Chef Ibrahim Al-Rashid
-- Embedded 5-star testimonial card overlay
+- Pull-quote from Chef Ibrahim Al-Rashid with gold rule divider
+- Floating 5-star testimonial card with animated "★ Rated #1" badge
+
+**Column 3 — Two parallax images**
+- Chef plating image (`/chef.jpeg`) with upward parallax on scroll
+- Terrace / Al Fresco image (`/terrace.jpeg`) with downward parallax on scroll
 - Gold border rings, staggered entrance animations
 
 ---
@@ -154,7 +171,18 @@ Cards have colour-coded tags (Signature, For Two, Best Seller, etc.), asymmetric
 
 ---
 
-### 5. Testimonials — `TestimonialsSection`
+### 5. Gallery — `/gallery`
+
+A standalone page (`src/app/gallery/`) that serves restaurant photography.
+
+- **Category tabs**: Food · Ambience — images are read server-side from `public/food/` and `public/ambience/` at build time
+- Responsive masonry-style grid; supports `.jpg`, `.jpeg`, `.png`, `.webp`, `.avif`, `.gif`
+- **Lightbox viewer**: click any image to open a full-screen overlay with prev/next navigation
+- Page header with animated entrance; includes `PrimaryNavigation` and `SiteFooter`
+
+---
+
+### 6. Testimonials — `TestimonialsSection`
 
 A paginated carousel of **30 guest reviews** across 5 slides.
 
@@ -165,36 +193,13 @@ A paginated carousel of **30 guest reviews** across 5 slides.
 
 ---
 
-### 6. Reservation — `ReservationSection`
-
-A two-column table booking form that writes directly to Firestore.
-
-**Left panel**: Opening hours, address, phone, email, and a Chef's pull-quote.
-
-**Right panel — form fields**:
-
-| Field | Notes |
-|---|---|
-| Name | Required |
-| Email | Required, validated |
-| Phone | Required |
-| Date | Constrained to today → +7 days |
-| Time | Free text |
-| Guests | Dropdown: 2–8+ |
-| Occasion | Anniversary, Birthday, Business Lunch, Date Night, + more |
-| Notes | Optional textarea |
-
-On submit, a document is written to the Firestore `reservation` collection with `status: "pending"` and a server timestamp. The form shows an inline success state and a "Make Another Reservation" reset button.
-
----
-
 ### 7. Footer — `SiteFooter`
 
 - Brand block: address, phone, email
 - Navigation columns: **Discover** · **Experience** · **Connect**
 - **Order Online**: Zomato and Swiggy direct links
 - Embedded Google Maps iframe (Taaza Indore location)
-- Social icons: Instagram, Zomato, Swiggy
+- Social icons: Instagram, Facebook, YouTube, Zomato, Swiggy
 - Bottom bar: copyright, tagline *"Crafted with passion. Served with love."*
 
 ---
